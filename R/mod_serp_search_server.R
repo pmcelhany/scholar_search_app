@@ -131,7 +131,10 @@ mod_serp_search_server <- function(id) {
                 s2_api_key = Sys.getenv("SEMANTIC_SCHOLAR_API_KEY", ""),
                 log_file = log_file, log_callback = append_log,
                 year_low = if (isTRUE(input$filter_by_year)) input$year_low else NULL,
-                year_high = if (isTRUE(input$filter_by_year)) input$year_high else NULL
+                year_high = if (isTRUE(input$filter_by_year)) input$year_high else NULL,
+                progress_callback = function(detail_msg) {
+                  shiny::incProgress(0, detail = sprintf("Query %d of %d: %s", index, length(queries), detail_msg))
+                }
               )
             }
 

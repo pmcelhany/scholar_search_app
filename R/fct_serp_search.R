@@ -36,7 +36,8 @@ parse_query_csv <- function(file_path, pattern = NULL) {
 robust_serp_search <- function(query, api_key, start_idx = 0, num = 20,
                                log_file = NULL, log_callback = NULL,
                                max_retries = 3) {
-  if (!nzchar(trimws(api_key))) stop("A SerpApi key is required.")
+  api_key <- trimws(api_key)
+  if (!nzchar(api_key)) stop("A SerpApi key is required.")
   for (attempt in seq.int(0L, max_retries)) {
     response <- tryCatch(
       httr::GET(
@@ -65,6 +66,15 @@ robust_serp_search <- function(query, api_key, start_idx = 0, num = 20,
         return(NULL)
       }
       return(result)
+    }
+    if (status == 401L) {
+      stop(errorCondition(
+        paste("SerpApi authentication failed (HTTP 401).",
+              "Verify the selected key in your SerpApi dashboard.",
+              "To use SERPAPI_API_KEY, select the server option;",
+              "restart the app after changing the environment variable."),
+        class = "serp_auth_error"
+      ))
     }
     if (status != 429L) {
       serp_log(sprintf("SerpApi request failed with HTTP %d.", status),

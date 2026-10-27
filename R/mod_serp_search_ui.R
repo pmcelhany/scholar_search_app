@@ -12,8 +12,13 @@ mod_serp_search_ui <- function(id) {
         shiny::fileInput(ns("csv_file"), "Search Terms CSV File",
                          accept = c(".csv", "text/csv")),
         shiny::helpText("One boolean query per row in a single column; an optional query header is supported."),
-        shiny::passwordInput(ns("serpapi_key"), "SerpApi Key", value = ""),
-        shiny::helpText("Leave the key blank to use SERPAPI_API_KEY on the server."),
+        shiny::checkboxInput(ns("use_env_key"), "Use server's SERPAPI_API_KEY",
+                             value = nzchar(trimws(Sys.getenv("SERPAPI_API_KEY", "")))),
+        shiny::conditionalPanel(
+          condition = "!input.use_env_key", ns = ns,
+          shiny::passwordInput(ns("serpapi_key"), "SerpApi Key", value = "")
+        ),
+        shiny::helpText("The server option ignores the password field. Restart the app after changing SERPAPI_API_KEY."),
         shiny::textInput(ns("queries_pat"),
                          "Filter Queries by Regex/Pattern (queries_pat)", value = ""),
         shiny::numericInput(ns("paper_limit"), "Fixed Paper Limit", value = 100, min = 1),

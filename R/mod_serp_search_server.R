@@ -40,10 +40,18 @@ mod_serp_search_server <- function(id) {
         if (is.null(input$csv_file) || !file.exists(input$csv_file$datapath)) {
           stop("Please upload a search terms CSV.")
         }
-        api_key <- if (is.null(input$serpapi_key)) "" else trimws(input$serpapi_key)
-        if (!nzchar(api_key)) api_key <- trimws(Sys.getenv("SERPAPI_API_KEY", ""))
+        use_env_key <- isTRUE(input$use_env_key)
+        api_key <- if (use_env_key) {
+          trimws(Sys.getenv("SERPAPI_API_KEY", ""))
+        } else {
+          if (is.null(input$serpapi_key)) "" else trimws(input$serpapi_key)
+        }
         if (!nzchar(api_key)) {
-          stop("Please provide a SerpApi key.")
+          stop(if (use_env_key) {
+            "SERPAPI_API_KEY is empty in the app process. Set it and restart the app, or enter a key manually."
+          } else {
+            "Please provide a SerpApi key or select the server's SERPAPI_API_KEY."
+          })
         }
         if (!valid_number(input$paper_limit, 1, integer = TRUE)) {
           stop("Fixed Paper Limit must be a positive whole number.")
@@ -71,6 +79,9 @@ mod_serp_search_server <- function(id) {
         results(NULL)
         update_status(sprintf("Searching %d queries...", length(queries)))
         serp_log(paste("Starting search session:", timestamp), log_file, append_log)
+        serp_log(paste("SerpApi credential source:",
+                       if (use_env_key) "server environment." else "password field."),
+                 log_file, append_log)
         shiny::withProgress(message = "Searching literature", value = 0, {
           for (index in seq_along(queries)) {
             update_status(sprintf("Searching query %d of %d.", index, length(queries)))
@@ -99,8 +110,8 @@ mod_serp_search_server <- function(id) {
           "Some queries failed or returned partial results. See the log.", type = "warning"
         )
       }, error = function(e) {
-        # Only validation messages are exposed; unexpected errors may include API URLs.
-        message <- if (is.null(log_file)) conditionMessage(e) else
+        # Only validation and safe authentication messages are exposed.
+        message <- if (is.null(log_file) || inherits(e, "serp_auth_error")) conditionMessage(e) else
           "Search interrupted. Completed queries remain saved; check the output directory and API connectivity."
         update_status(message)
         if (!is.null(log_file)) {

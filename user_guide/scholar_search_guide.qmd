@@ -10,18 +10,18 @@ format:
 
 # Introduction
 
-The **Scholar Search App** is a Shiny application designed to automate and standardize bulk literature searches using Google Scholar (via [SerpApi](https://serpapi.com/)). 
+The **Scholar Search App** is a Shiny application designed to automate and standardize bulk literature searches using Google Scholar (via [SerpApi](https://serpapi.com/)).
 
 Rather than manually entering dozens of search terms into a web browser, copying the results, and wrestling with Google Scholar's varying relevance rankings, this app allows you to upload a spreadsheet of boolean search queries. It then programmatically retrieves the results, standardizes the metadata (attempting to fetch full abstracts and DOI links using CrossRef and Semantic Scholar), and exports a clean dataset and an `.ris` file for your reference manager.
 
 ## Key Features
 
-- **Batch Searching:** Run dozens of complex boolean queries automatically.
-- **Deduplication:** Automatically merge identical papers across different queries into a single record.
-- **Enhanced Metadata:** Fetch robust abstracts and DOIs missing from standard Google Scholar results.
-- **Reference Manager Ready:** Directly outputs an `.ris` file formatted for EndNote, Zotero, or Mendeley.
+-   **Batch Searching:** Run dozens of complex boolean queries automatically.
+-   **Deduplication:** Automatically merge identical papers across different queries into a single record.
+-   **Enhanced Metadata:** Fetch robust abstracts and DOIs missing from standard Google Scholar results.
+-   **Reference Manager Ready:** Directly outputs an `.ris` file formatted for EndNote, Zotero, or Mendeley.
 
----
+------------------------------------------------------------------------
 
 # Setup and Configuration
 
@@ -29,9 +29,9 @@ Rather than manually entering dozens of search terms into a web browser, copying
 
 To use the app, you will need a **SerpApi Key**. SerpApi acts as a proxy, querying Google Scholar on your behalf without getting blocked.
 
-1. Create a free or paid account at [SerpApi](https://serpapi.com/).
-2. Copy your API key from the dashboard.
-3. You can either paste this key directly into the app interface or store it in your computer's environment variables as `SERPAPI_API_KEY` for convenience.
+1.  Create a free or paid account at [SerpApi](https://serpapi.com/).
+2.  Copy your API key from the dashboard.
+3.  You can either paste this key directly into the app interface or store it in your computer's environment variables as `SERPAPI_API_KEY` for convenience.
 
 *(Optional)* For the best metadata retrieval, you can also store a `SEMANTIC_SCHOLAR_API_KEY` in your environment variables. The app will automatically use it to resolve abstracts faster, though it will fall back to public endpoints if one is not provided.
 
@@ -39,73 +39,67 @@ To use the app, you will need a **SerpApi Key**. SerpApi acts as a proxy, queryi
 
 The app requires a `.csv` file containing your search queries.
 
-* The file should contain **exactly one column** of search queries.
-* Each row should represent a single search string.
-* You may include an optional header row (e.g., "query", "search_terms"). The app will safely ignore standard header names.
-* Use capital boolean operators (`AND`, `OR`, `NOT`/`-`) for the most rigorous results.
+-   The file should contain **exactly one column** of search queries.
+-   Each row should represent a single search string.
+-   You may include an optional header row (e.g., "query", "search_terms"). The app will safely ignore standard header names.
+-   Use capital boolean operators (`AND`, `OR`, `NOT`/`-`) for the most rigorous results.
 
 **Example `queries.csv`:**
-```csv
+
+``` csv
 search_query
 "climate change" AND "coral reef"
 "ocean acidification" AND (lobster OR crab)
 ```
 
----
+------------------------------------------------------------------------
 
 # Running a Search
 
-1. **Upload CSV:** Click the "Browse" button under "Search Terms CSV File" and select your prepared query list.
-2. **Provide API Key:** If you have not set an environment variable, paste your SerpApi key here.
-3. **Filter Queries (Optional):** If you uploaded a large CSV but only want to run a subset of the queries, you can enter a regular expression here to filter the list.
-4. **Set Paper Limits:** 
-    * **Fixed Paper Limit:** The maximum number of papers to retrieve *per query*. (Default is 100).
-    * **Dynamic Paper Limit:** If enabled, the app adjusts the limit based on the total estimated matches returned by Google Scholar. For example, a fraction of `0.1` means it will attempt to retrieve 10% of the total estimated matches, bounded by a minimum and maximum threshold.
-5. **Search Filters:**
-    * **Filter by Year Range:** You can restrict your search to papers published between a specific start and end year.
-6. **Metadata & Processing Options:**
-    * **Lookup Full Abstract:** (Recommended) Keep this checked to allow the app to cross-reference hits against Semantic Scholar and CrossRef to fill in missing abstracts and DOIs. *Note: This metadata lookup process can be slow (sometimes adding several seconds per paper) due to API rate limiting and backoff protocols. If speed is your priority and you only need basic titles/authors, you can uncheck this.*
-    * **Deduplicate Results:** When checked, if multiple queries return the exact same paper (matched by Title and Year), the app will collapse them into a single row in the final output to save you time during literature screening.
-7. **Output Settings:**
-    * **Select Output Directory:** Click this button to open a local file browser and choose the exact folder where you want the results saved.
-    * **Output File Prefix (Optional):** Enter a custom prefix (e.g., `project_alpha_`) to organize your files. All 5 generated files will automatically be prepended with this text.
+1.  **Upload CSV:** Click the "Browse" button under "Search Terms CSV File" and select your prepared query list.
+2.  **Provide API Key:** If you have not set an environment variable, paste your SerpApi key here.
+3.  **Filter Queries (Optional):** If you uploaded a large CSV but only want to run a subset of the queries, you can enter a regular expression here to filter the list.
+4.  **Set Paper Limits:**
+    -   **Fixed Paper Limit:** The maximum number of papers to retrieve *per query*. (Default is 100).
+    -   **Dynamic Paper Limit:** If enabled, the app adjusts the limit based on the total estimated matches returned by Google Scholar. For example, a fraction of `0.1` means it will attempt to retrieve 10% of the total estimated matches, bounded by a minimum and maximum threshold.
+5.  **Search Filters:**
+    -   **Filter by Year Range:** You can restrict your search to papers published between a specific start and end year.
+6.  **Metadata & Processing Options:**
+    -   **Lookup Full Abstract:** (Recommended) Keep this checked to allow the app to cross-reference hits against Semantic Scholar and CrossRef to fill in missing abstracts and DOIs. *Note: This metadata lookup process can be slow (sometimes adding several seconds per paper) due to API rate limiting and backoff protocols. If speed is your priority and you only need basic titles/authors, you can uncheck this.*
+    -   **Deduplicate Results:** When checked, if multiple queries return the exact same paper (matched by Title and Year), the app will collapse them into a single row in the final output to save you time during literature screening.
+7.  **Output Settings:**
+    -   **Select Output Directory:** Click this button to open a local file browser and choose the exact folder where you want the results saved.
+    -   **Output File Prefix (Optional):** Enter a custom prefix (e.g., `project_alpha_`) to organize your files. All 5 generated files will automatically be prepended with this text.
 
 Once configured, click **Run Search**. A progress bar will track the process query by query.
 
----
+------------------------------------------------------------------------
 
 # Understanding Outputs
 
 When the search finishes, the app will generate several files in your designated output directory. Each file is stamped with a session timestamp (e.g., `_20261027_153000`).
 
 ### 1. Unique Papers CSV (`unique_papers_*.csv`)
-This is the primary human-readable spreadsheet. It contains the deduplicated list of papers, formatted neatly with columns for:
-* First Author Last Name
-* Publication Year
-* Title
-* Journal Name
-* Full Author List
-* Abstract
-* DOI
-* Search Rank (Where it appeared in the Google Scholar results)
+
+This is the primary human-readable spreadsheet. It contains the deduplicated list of papers, formatted neatly with columns for: \* First Author Last Name \* Publication Year \* Title \* Journal Name \* Full Author List \* Abstract \* DOI \* Search Rank (Where it appeared in the Google Scholar results)
 
 ### 2. RIS File (`unique_results_*.ris`)
+
 This is the standardized citation file. You can import this file directly into citation managers like Zotero, Mendeley, or EndNote. It contains all the metadata from the CSV.
 
 ### 3. Search Summary (`search_summary_*.csv`)
-A high-level diagnostic log showing how many queries succeeded. The columns in this table are:
-* **`search_query`**: The exact boolean string sent to the API.
-* **`total_matches`**: The estimated total number of indexable papers Google Scholar claims match the query. *(Note: This is often a highly optimistic estimate and rarely represents the true number of viewable pages).*
-* **`retrieved`**: The actual number of papers the app successfully scraped and downloaded.
-* **`failed`**: A TRUE/FALSE flag indicating if the query hit an API error, rate limit, or timeout.
+
+A high-level diagnostic log showing how many queries succeeded. The columns in this table are: \* **`search_query`**: The exact boolean string sent to the API. \* **`total_matches`**: The estimated total number of indexable papers Google Scholar claims match the query. *(Note: This is often a highly optimistic estimate and rarely represents the true number of viewable pages).* \* **`retrieved`**: The actual number of papers the app successfully scraped and downloaded. \* **`failed`**: A TRUE/FALSE flag indicating if the query hit an API error, rate limit, or timeout.
 
 ### 4. Search Log (`search_log_*.txt`)
+
 A detailed technical log of the API requests, timestamps, and error messages (such as rate limits). Use this if a search fails or hangs.
 
 ### 5. Checkpoint File (`search_state_*.rds`)
+
 An R data file containing the raw, unprocessed API response lists. Useful for developers who want to inspect the underlying data structure without re-running costly API calls.
 
----
+------------------------------------------------------------------------
 
 # Troubleshooting
 
@@ -113,13 +107,14 @@ An R data file containing the raw, unprocessed API response lists. Useful for de
 
 You may notice that running a search in this app returns a different number of results—and a different relevance ranking—than typing the exact same terms into Google Scholar in your web browser. This is normal and expected behavior for several reasons:
 
-1. **Strict Boolean vs. Fuzzy Matching:** When you use `AND` in this app, the API strictly enforces the boolean operator. In a web browser, Google often ignores strict booleans in favor of fuzzy matching, synonym replacement, and stemming (e.g., matching "cats" when you typed "cat").
-2. **"About X Results" is an Estimate:** When you search on the web, Google Scholar might say "About 6,600 results." This is a statistical estimate made for speed. The app paginates through the actual results, triggering Google Scholar to reveal the true, much lower count of indexable papers (often in the low hundreds).
-3. **No Personalization:** Web browser results are heavily tailored based on your IP address, geographic location, search history, and linked institutional library access. The app queries Google Scholar via SerpApi proxies, representing a completely unpersonalized, "blank slate" search.
-4. **Deduplication:** If you enable the deduplication option, the app aggressively merges identical papers. The web browser often lets different versions (like a preprint and a final publication) slip into the main ranking as separate hits.
+1.  **Strict Boolean vs. Fuzzy Matching:** When you use `AND` in this app, the API strictly enforces the boolean operator. In a web browser, Google often ignores strict booleans in favor of fuzzy matching, synonym replacement, and stemming (e.g., matching "cats" when you typed "cat").
+2.  **"About X Results" is an Estimate:** When you search on the web, Google Scholar might say "About 6,600 results." This is a statistical estimate made for speed. The app paginates through the actual results, triggering Google Scholar to reveal the true, much lower count of indexable papers (often in the low hundreds).
+3.  **No Personalization:** Web browser results are heavily tailored based on your IP address, geographic location, search history, and linked institutional library access. The app queries Google Scholar via SerpApi proxies, representing a completely unpersonalized, "blank slate" search.
+4.  **Deduplication:** If you enable the deduplication option, the app aggressively merges identical papers. The web browser often lets different versions (like a preprint and a final publication) slip into the main ranking as separate hits.
 
 ## Common Errors
 
-* **Zero Results or "SerpApi connection failed":** Double-check that your SerpApi key is valid and that you have remaining search credits on your account.
-* **Fewer Results Than Expected:** See the *API vs. Web Browser Discrepancies* section above.
-* **App Hangs/Pauses:** The app has built-in rate-limiting and backoffs to prevent you from being banned by SerpApi or Semantic Scholar. Let it run; it will often pause for several seconds between requests intentionally, especially when looking up metadata.
+-   **Queries marked as "Failed" in the Summary Table:** If a query shows `TRUE` in the `failed` column of the `search_summary_*.csv`, it means the API request timed out, hit a hard rate limit, or encountered a severe error. To troubleshoot, open the corresponding `search_log_*.txt` file in your output directory and look for the specific query. The log will usually indicate whether it was an HTTP 429 (Too Many Requests), a SerpApi credential issue, or a network timeout. 
+-   **Zero Results or "SerpApi connection failed":** Double-check that your SerpApi key is valid and that you have remaining search credits on your account.
+-   **Fewer Results Than Expected:** See the *API vs. Web Browser Discrepancies* section above.
+-   **App Hangs/Pauses:** The app has built-in rate-limiting and backoffs to prevent you from being banned by SerpApi or Semantic Scholar. Let it run; it will often pause for several seconds between requests intentionally, especially when looking up metadata.

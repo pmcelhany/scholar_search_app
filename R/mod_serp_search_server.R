@@ -40,8 +40,10 @@ mod_serp_search_server <- function(id) {
         if (is.null(input$csv_file) || !file.exists(input$csv_file$datapath)) {
           stop("Please upload a search terms CSV.")
         }
-        api_key <- if (is.null(input$serpapi_key)) "" else trimws(input$serpapi_key)
-        if (!nzchar(api_key)) api_key <- trimws(Sys.getenv("SERPAPI_API_KEY", ""))
+        api_key <- normalize_serpapi_key(input$serpapi_key)
+        if (!nzchar(api_key)) {
+          api_key <- normalize_serpapi_key(Sys.getenv("SERPAPI_API_KEY", ""))
+        }
         if (!nzchar(api_key)) {
           stop("Please provide a SerpApi key.")
         }

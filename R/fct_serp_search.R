@@ -33,10 +33,19 @@ parse_query_csv <- function(file_path, pattern = NULL) {
   unique(queries)
 }
 
+normalize_serpapi_key <- function(api_key) {
+  if (is.null(api_key)) return("")
+  api_key <- trimws(api_key, whitespace = "[\\h\\v]")
+  api_key <- sub("^SERPAPI_API_KEY\\s*=\\s*", "", api_key, perl = TRUE)
+  api_key <- sub("^(['\"])(.*)\\1$", "\\2", api_key, perl = TRUE)
+  trimws(api_key, whitespace = "[\\h\\v]")
+}
+
 robust_serp_search <- function(query, api_key, start_idx = 0, num = 20,
                                log_file = NULL, log_callback = NULL,
                                max_retries = 3) {
-  if (!nzchar(trimws(api_key))) stop("A SerpApi key is required.")
+  api_key <- normalize_serpapi_key(api_key)
+  if (!nzchar(api_key)) stop("A SerpApi key is required.")
   for (attempt in seq.int(0L, max_retries)) {
     response <- tryCatch(
       httr::GET(

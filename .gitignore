@@ -51,3 +51,6 @@ rsconnect/
 
 # mac ds files
 .DS_Store
+
+# output folder
+output/

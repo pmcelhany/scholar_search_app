@@ -1,8 +1,0 @@
-[2026-10-27 17:28:14 UTC] Starting search session: 20261027_172814_512569 
-[2026-10-27 17:28:14 UTC] Searching for: jello AND cat 
-[2026-10-27 17:28:14 UTC] SerpApi request failed with HTTP 401. 
-[2026-10-27 17:28:14 UTC] Saved 0 unique papers and 1 query summaries. 
-[2026-10-27 17:28:14 UTC] Searching for: lobster AND mcdr 
-[2026-10-27 17:28:14 UTC] SerpApi request failed with HTTP 401. 
-[2026-10-27 17:28:14 UTC] Saved 0 unique papers and 2 query summaries. 
-[2026-10-27 17:28:14 UTC] Finished: 0 unique papers; 2 failed or partial queries. Saved to output/lit_search 

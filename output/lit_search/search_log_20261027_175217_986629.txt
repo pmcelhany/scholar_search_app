@@ -1,0 +1,179 @@
+[2026-10-27 17:52:17 UTC] Starting search session: 20261027_175217_986629 
+[2026-10-27 17:52:17 UTC] Searching for: jello AND cat 
+[2026-10-27 17:52:21 UTC]   Total matches: 2240 
+[2026-10-27 17:52:21 UTC]   Retrieved 20 papers. 
+[2026-10-27 17:52:29 UTC]   Retrieved 40 papers. 
+[2026-10-27 17:52:38 UTC]   Retrieved 60 papers. 
+[2026-10-27 17:52:42 UTC]   Retrieved 80 papers. 
+[2026-10-27 17:52:46 UTC] SerpApi returned an invalid response or API error. 
+[2026-10-27 17:52:46 UTC]   Attempting exact metadata match for: Feline lower urinary tract disorders: definition of terms and concepts 
+[2026-10-27 17:53:06 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 17:53:08 UTC]   Attempting exact metadata match for: Ciguatoxin from the flesh and viscera of the barracuda, Sphyraena jello 
+[2026-10-27 17:53:28 UTC]   Attempting exact metadata match for: Feline urethral plugs: Etiology and pathophysiology 
+[2026-10-27 17:53:39 UTC]   Attempting exact metadata match for: Safe Autumn Treats for Dogs and Cats 
+[2026-10-27 17:53:42 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 17:53:43 UTC]   Attempting exact metadata match for: Mystery, Murder, Misery and Meat 
+[2026-10-27 17:54:03 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 17:54:11 UTC]   Attempting exact metadata match for: “When the monsters come jello them”: Fatherhood, Vulnerability, and the Magic of the Mundane in James Kochalka's American Elf 
+[2026-10-27 17:54:31 UTC]   Attempting exact metadata match for: Feline matrix‐crystalline urethral plugs: a unifying hypothesis of causes 
+[2026-10-27 17:54:39 UTC]   Attempting exact metadata match for: " What's on Their Plates?" or Feeding the Hungry Mouths: Laborers, Families, and Food in the Late Twentieth Century 
+[2026-10-27 17:54:48 UTC]   Attempting exact metadata match for: The cat ate my gymsuit 
+[2026-10-27 17:54:49 UTC]   Attempting exact metadata match for: The Fisher Cat 
+[2026-10-27 17:54:52 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 17:55:02 UTC]   Attempting exact metadata match for: Will Baker:" What a Piece of Work: Stories"(Book Review) 
+[2026-10-27 17:55:10 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 17:55:19 UTC]   Attempting exact metadata match for: MORENO VELOSO 
+[2026-10-27 17:55:23 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 17:55:33 UTC]   Attempting exact metadata match for: Recipes for an Instant American–Just Add a Side of Victory Cabbage and Jello-O: The Americanization of the United States through Cookbooks 
+[2026-10-27 17:55:42 UTC]   Attempting exact metadata match for: Prevalence of toxigenic Clostridium botulinum in food products sold in Indian retail markets 
+[2026-10-27 17:56:02 UTC]   Attempting exact metadata match for: What a Piece of Work: Stories. 
+[2026-10-27 17:56:21 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 17:56:30 UTC]   Attempting exact metadata match for: ZEITKRATZER 
+[2026-10-27 17:56:32 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 17:56:53 UTC]   Attempting exact metadata match for: Husband‐wife innovative consumer decision making: Exploring the effect of family power 
+[2026-10-27 17:56:54 UTC]   Attempting exact metadata match for: Cat-o-Nine Tails 
+[2026-10-27 17:56:57 UTC]   Attempting exact metadata match for: Mandibular Odontogenic Fibrosarcoma in Pickhandle Barracuda (Sphyraena jello Cuvier, 1829) 
+[2026-10-27 17:57:00 UTC]   Attempting exact metadata match for: PS your cat is dead 
+[2026-10-27 17:57:08 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 17:57:27 UTC]   Attempting exact metadata match for: Model Implementation 
+[2026-10-27 17:57:47 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 17:57:50 UTC]   Attempting exact metadata match for: The hard word: An orgy of cliches 
+[2026-10-27 17:57:52 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 17:58:00 UTC]   Attempting exact metadata match for: اثرخشک کردن در شرایط هوای آزاد و محفظه پلاستیکی روی ارزش غذایی دو گونه ماهی Sphyraena jello وSphyraena forsteri‎ 
+[2026-10-27 17:58:20 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 17:58:29 UTC]   Attempting exact metadata match for: Determination of Human Temperature Rhythms 
+[2026-10-27 17:58:37 UTC]   Attempting exact metadata match for: He is Mine 
+[2026-10-27 17:58:56 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 17:59:04 UTC]   Attempting exact metadata match for: Cornell Feline Health Center Annual Reprot 2006 
+[2026-10-27 17:59:24 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 17:59:44 UTC]   Attempting exact metadata match for: Nearly Twenty Questions 
+[2026-10-27 18:00:04 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:00:24 UTC]   Attempting exact metadata match for: The administration of Fumaria parviflora extract to regulate glucose and insulin level, alongside iron accumulation and renal histopathological alterations in … 
+[2026-10-27 18:00:44 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:00:46 UTC]   Attempting exact metadata match for: The Beasts & the Elders 
+[2026-10-27 18:00:55 UTC]   Attempting exact metadata match for: Changes in Audiovisual Word Perception During Mid-Childhood: An Erp Study 
+[2026-10-27 18:01:04 UTC]   Attempting exact metadata match for: TIGER MEETS TIGER SATURDAY 
+[2026-10-27 18:01:06 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:01:15 UTC]   Attempting exact metadata match for: Supporting diverse and creative collaboration in the Scratch online community 
+[2026-10-27 18:01:17 UTC]   Attempting exact metadata match for: Prevailing Culinary, Psychological, and Metaphysical Conditions: Meatballs and Reality 
+[2026-10-27 18:01:36 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:01:56 UTC]   Attempting exact metadata match for: Monolinguals Teaching Bilinguals: Reading in ESL for Spanish Speakers 
+[2026-10-27 18:02:08 UTC]   Attempting exact metadata match for: Libraries, Facetiae, etc.: Chairing a Conference Committee: Not for the Faint of Heart 
+[2026-10-27 18:02:16 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:02:25 UTC]   Attempting exact metadata match for: Big fierce animals of Hong Kong 
+[2026-10-27 18:02:34 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:02:42 UTC]   Attempting exact metadata match for: My Regulars 
+[2026-10-27 18:02:50 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:02:52 UTC]   Attempting exact metadata match for: In vitro effect of streptomycin on clinical isolates of Pythium insidiosum 
+[2026-10-27 18:03:01 UTC]   Attempting exact metadata match for: Survey of ciguatera and tetrodotoxin of blowfish in Thailand 
+[2026-10-27 18:03:11 UTC]   Attempting exact metadata match for: Gone Bananas 
+[2026-10-27 18:03:31 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:03:50 UTC]   Attempting exact metadata match for: They Ate the Cat-Now What Do I Do?! Identifying and Managing Recurrent Intercultural Conflict Experienced by Canadian Foreign Service Management … 
+[2026-10-27 18:03:52 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:04:11 UTC]   Attempting exact metadata match for: The Courage to Be at Double Deuce 
+[2026-10-27 18:04:13 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:04:14 UTC]   Attempting exact metadata match for: Price structure of marine fishes landed at the Madras Fisheries harbour with special reference to shellfishes 
+[2026-10-27 18:04:33 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:04:41 UTC]   Attempting exact metadata match for: Ontological Reflections on What There Is 
+[2026-10-27 18:05:00 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:05:02 UTC]   Attempting exact metadata match for: Atypical audiovisual word processing in school-age children with a history of specific language impairment: An event-related potential study 
+[2026-10-27 18:05:04 UTC]   Attempting exact metadata match for: Love in the Time of aids 
+[2026-10-27 18:05:06 UTC]   Attempting exact metadata match for: What Do You Think of That! 
+[2026-10-27 18:05:14 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:05:17 UTC]   Attempting exact metadata match for: Model Implementation 
+[2026-10-27 18:05:38 UTC]   Attempting exact metadata match for: The hard word: An orgy of cliches 
+[2026-10-27 18:05:57 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:06:17 UTC]   Attempting exact metadata match for: Determination of Human Temperature Rhythms 
+[2026-10-27 18:06:19 UTC]   Attempting exact metadata match for: He is Mine 
+[2026-10-27 18:06:37 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:06:39 UTC]   Attempting exact metadata match for: Becoming the Cat Lady 
+[2026-10-27 18:06:42 UTC]   Attempting exact metadata match for: Captive enrichment for owls (Strigiformes). 
+[2026-10-27 18:06:50 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:06:58 UTC]   Attempting exact metadata match for: The administration of Fumaria parviflora extract to regulate glucose and insulin level, alongside iron accumulation and renal histopathological alterations in … 
+[2026-10-27 18:07:07 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:07:27 UTC]   Attempting exact metadata match for: The Beasts & the Elders 
+[2026-10-27 18:07:47 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:07:57 UTC]   Attempting exact metadata match for: Changes in Audiovisual Word Perception During Mid-Childhood: An Erp Study 
+[2026-10-27 18:07:59 UTC]   Attempting exact metadata match for: The Snake-My Friend, Immanuel Snakeburden 
+[2026-10-27 18:08:07 UTC]   Attempting exact metadata match for: TIGER MEETS TIGER SATURDAY 
+[2026-10-27 18:08:27 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:08:57 UTC]   Attempting exact metadata match for: Girly man 
+[2026-10-27 18:09:17 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:09:37 UTC]   Attempting exact metadata match for: Prevailing Culinary, Psychological, and Metaphysical Conditions: Meatballs and Reality 
+[2026-10-27 18:09:39 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:09:59 UTC]   Attempting exact metadata match for: Becoming the Cat Lady 
+[2026-10-27 18:10:18 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:10:19 UTC]   Attempting exact metadata match for: Nearly Twenty Questions 
+[2026-10-27 18:10:40 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:10:48 UTC]   Attempting exact metadata match for: Captive enrichment for owls (Strigiformes). 
+[2026-10-27 18:10:56 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:11:04 UTC]   Attempting exact metadata match for: Guided by Voices: a brief history: twenty-one years of hunting accidents in the forests of rock and roll 
+[2026-10-27 18:11:24 UTC]   Attempting exact metadata match for: The administration of Fumaria parviflora extract to regulate glucose and insulin level, alongside iron accumulation and renal histopathological alterations in … 
+[2026-10-27 18:11:26 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:11:28 UTC]   Attempting exact metadata match for: Wright State maintains degree distribution under new SSI formula 
+[2026-10-27 18:11:36 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:11:44 UTC]   Attempting exact metadata match for: The Snake-My Friend, Immanuel Snakeburden 
+[2026-10-27 18:11:52 UTC]   Attempting exact metadata match for: Supporting diverse and creative collaboration in the Scratch online community 
+[2026-10-27 18:12:13 UTC]   Attempting exact metadata match for: Girly man 
+[2026-10-27 18:12:15 UTC]   Attempting exact metadata match for: Prevailing Culinary, Psychological, and Metaphysical Conditions: Meatballs and Reality 
+[2026-10-27 18:12:24 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:12:45 UTC]   Attempting exact metadata match for: Monolinguals Teaching Bilinguals: Reading in ESL for Spanish Speakers 
+[2026-10-27 18:12:54 UTC]   Attempting exact metadata match for: A standardized method for incorporation of drugs into food for use with Drosophila melanogaster 
+[2026-10-27 18:12:56 UTC]   Attempting exact metadata match for: Understanding a pandemic through virtual storytelling events 
+[2026-10-27 18:13:16 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:13:25 UTC]   Attempting exact metadata match for: Big fierce animals of Hong Kong 
+[2026-10-27 18:13:27 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:13:36 UTC]   Attempting exact metadata match for: Living in-and on-the margins 
+[2026-10-27 18:13:56 UTC]   Attempting exact metadata match for: By the waters of babylon 
+[2026-10-27 18:14:16 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:14:25 UTC]   Attempting exact metadata match for: Survey of ciguatera and tetrodotoxin of blowfish in Thailand 
+[2026-10-27 18:14:34 UTC]   Attempting exact metadata match for: Gone Bananas 
+[2026-10-27 18:14:53 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:15:13 UTC]   Attempting exact metadata match for: Chapter Sixteen 
+[2026-10-27 18:15:16 UTC]   Attempting exact metadata match for: Production of definite and indefinite articles in typically developing English-speaking children and children with SLI 
+[2026-10-27 18:15:18 UTC] Saved 59 unique papers and 1 query summaries. 
+[2026-10-27 18:15:18 UTC] Searching for: lobster AND mcdr 
+[2026-10-27 18:15:20 UTC]   Total matches: 27 
+[2026-10-27 18:15:20 UTC]   Retrieved 20 papers. 
+[2026-10-27 18:15:25 UTC]   Retrieved 24 papers. 
+[2026-10-27 18:15:25 UTC]   Attempting exact metadata match for: Navigating (Un) charted Waters: Lessons from WHOI's LOC-NESS Ocean Alkalinity Enhancement Field Trial for 
+[2026-10-27 18:15:45 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:16:05 UTC]   Attempting exact metadata match for: Development of the ecological activity index as an integrative ecosystem assessment and monitoring asset for ocean alkalinity enhancement 
+[2026-10-27 18:16:06 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:16:26 UTC]   Attempting exact metadata match for: Field notes on public communication and engagement for the LOC-NESS Ocean Alkalinity Enhancement field trial 
+[2026-10-27 18:16:35 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:16:54 UTC]   Attempting exact metadata match for: Ocean and coastal acidification monitoring priorities for the northeast US and eastern Canada 
+[2026-10-27 18:17:02 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:17:04 UTC]   Attempting exact metadata match for: Sea Grant Network Contributions to the National Ocean and Coastal Acidification Response 
+[2026-10-27 18:17:22 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:17:25 UTC]   Attempting exact metadata match for: A high-resolution coupled physical-biogeochemical model of the northeastern US continental shelf: MOM6-COBALT-NEUS25v1. 0 
+[2026-10-27 18:17:44 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:18:05 UTC]   Attempting exact metadata match for: Biological thresholds for marine carbon dioxide removal (mCDR): the effect of changes in carbonate chemistry 
+[2026-10-27 18:18:13 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:18:15 UTC]   Attempting exact metadata match for: Full Fathom Five: Industrial Fishing, Carbon, and the Economics of Extinction 
+[2026-10-27 18:18:17 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:18:37 UTC]   Attempting exact metadata match for: Copepod growth in detail: pattern similarity to decapod larvae 
+[2026-10-27 18:18:38 UTC]   Attempting exact metadata match for: Genetic population structure and tools for the management of European sprat (Sprattus sprattus) 
+[2026-10-27 18:18:59 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:19:18 UTC]   Attempting exact metadata match for: Limited impact on oysters in first-of-its-kind field trial of marine carbon dioxide removal (mCDR) strategy 
+[2026-10-27 18:19:19 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:19:21 UTC]   Attempting exact metadata match for: How little we've seen: A visual coverage estimate of the deep seafloor 
+[2026-10-27 18:19:23 UTC]   Attempting exact metadata match for: Forest of the Sea: The Remarkable Life and Imperiled Future of Kelp 
+[2026-10-27 18:19:42 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:19:50 UTC]   Attempting exact metadata match for: Methods for measuring carbon dioxide uptake and permanence: Review and implications for macroalgae aquaculture 
+[2026-10-27 18:20:11 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:20:19 UTC]   Attempting exact metadata match for: Quantifying fishers' and citizens' support for Dutch flatfish management policy 
+[2026-10-27 18:20:21 UTC]   Attempting exact metadata match for: Identifying indicators of the effects of fishing using alternative models, uncertainty, and aggregation error 
+[2026-10-27 18:20:30 UTC]   Attempting exact metadata match for: Feels like home: homing of mature large-bodied fish following translocation from a power-station canal 
+[2026-10-27 18:20:38 UTC]   Attempting exact metadata match for: MARINE CARBON DIOXIDE REMOVAL FROM THE GLOBAL OCEAN ACIDIFICATION OBSERVING NETWORK 
+[2026-10-27 18:20:58 UTC]   Attempting exact metadata match for: MARINE CARBON DIOXIDE REMOVAL 
+[2026-10-27 18:21:18 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:21:20 UTC]   Attempting exact metadata match for: Evaluating the Potential of Macroalgal Cultivation & Intentional Biomass Sinking as an mCDR Strategy in the Northeastern United States: A Case Study for Point Judith … 
+[2026-10-27 18:21:41 UTC]   Attempting exact metadata match for: Archive for CCS 
+[2026-10-27 18:22:01 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:22:22 UTC]   Attempting exact metadata match for: Archive for nutricline 
+[2026-10-27 18:22:42 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:22:43 UTC]   Attempting exact metadata match for: Concurrent Western Australian telephone surveys highlight the advantages of sampling from a registry of recreational fishers 
+[2026-10-27 18:22:45 UTC]   Attempting exact metadata match for: Where do EU missions come from? A Discursive and Institutionalist Analysis of the European Union's Engagement in the Horn of Africa 
+[2026-10-27 18:22:47 UTC] Saved 83 unique papers and 2 query summaries. 
+[2026-10-27 18:22:47 UTC] Finished: 83 unique papers; 1 failed or partial queries. Saved to output/lit_search 

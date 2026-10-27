@@ -1,0 +1,3 @@
+"search_query","total_matches","retrieved","failed"
+"jello AND cat",2240,80,TRUE
+"lobster AND mcdr",27,24,FALSE

@@ -73,6 +73,14 @@ mod_serp_search_server <- function(id) {
           }
         }
         
+        if (isTRUE(input$filter_by_year)) {
+          if (!valid_number(input$year_low, 1900, integer = TRUE) ||
+              !valid_number(input$year_high, 1900, integer = TRUE) ||
+              input$year_low > input$year_high) {
+            stop("Please provide a valid year range (From Year must be less than or equal to To Year).")
+          }
+        }
+        
         if (isTRUE(input$use_dynamic_papers_limit) &&
             (!valid_number(input$dynamic_fraction, 0.01, 1) ||
              !valid_number(input$dynamic_min, 1, integer = TRUE) ||

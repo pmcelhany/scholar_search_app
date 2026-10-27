@@ -1,0 +1,824 @@
+---
+title: "mCDR Thresholds SerpApi (Google Scholar) Lit Search"
+author: "Paul McElhany"
+format:
+  html:
+    code-fold: true
+    code-summary: "Show the code"
+    embed-resources: true
+    toc: true
+    number-sections: true
+execute:
+  warning: true
+  message: true
+editor_options:
+  chunk_output_type: console
+---
+
+# Introduction
+
+This document performs a multi-term literature search on Google Scholar using the SerpApi service. It iterates through a vector of search queries, aggregates the results into a single data frame, and generates a single RIS file containing unique papers across all search terms. Using SerpApi avoids the need for complex scraping strategies and helps bypass CAPTCHAs and other blocks.
+
+# How to Resume a Search
+
+If a search is interrupted by a connectivity issue or other failure, it can be resumed from the last saved checkpoint:
+
+1. Locate the most recent `.rds` checkpoint file in the `output/lit_search/` directory. These files are timestamped (UTC), e.g., `search_state_20250522_143000.rds`.
+2. In the **Set Search Parameters** section below:
+   - Set `resume_search <- TRUE`.
+   - Copy the path to the latest checkpoint file into `checkpoint_to_resume`, for example: `checkpoint_to_resume <- here::here("output/lit_search/search_state_20250522_143000.rds")`.
+3. Restart the program by rendering the document again. The program will load the results obtained so far and skip the search terms that have already been completed.
+
+# Load Libraries
+
+```{r load-libraries}
+# Load necessary libraries
+library(tidyverse)
+library(httr)
+library(jsonlite)
+library(gt)
+library(here)
+```
+
+# Set Search Parameters
+
+```{r search-parameters}
+# Maximum number of papers to retrieve for each search query (Fixed limit)
+# Default is 20
+paper_limit <- 100
+
+# Number of papers to include in summaries, results table, and RIS output file
+# Default is 20
+paper_output <- 100
+
+#Search queries
+search_queries <- read_csv(queries_path)
+
+# Resumption Settings
+# TRUE: Resume a search from a checkpoint file
+# FALSE: Start a new search (Default)
+resume_search <- TRUE
+
+# Path to the .rds checkpoint file to resume from
+# Example: here::here("output/lit_search/search_state_20250522_143000.rds")
+checkpoint_to_resume <- "search_state_20260501_233056.rds"
+
+# Dynamic Papers Limit Settings
+# TRUE: Calculate the number of papers to retrieve based on total matches
+# FALSE: Use the fixed 'paper_limit' (Default)
+use_dynamic_papers_limit <- FALSE
+
+# Fraction of total matches to retrieve (Default 0.1)
+dynamic_fraction <- 0.1
+
+# Minimum number of papers to retrieve (Default 20)
+# If total matches < dynamic_min, all matches are retrieved.
+dynamic_min <- 20
+
+# Maximum number of papers to retrieve for any single search (Default 200)
+dynamic_max <- 200
+
+# Full Abstract Lookup (Semantic Scholar)
+# TRUE: Attempt to fetch the full abstract from Semantic Scholar by paper title
+# FALSE: Use the snippet/sentence fragment from Google Scholar (Default)
+use_full_abstract_lookup <- TRUE
+```
+
+# Define Robust Search Function
+
+```{r robust-serp-search}
+# Function to query Google Scholar via SerpApi with retry logic
+# To use your SerpApi key:
+# 1. Open your .Renviron file (e.g., using usethis::edit_r_environ())
+# 2. Add a line: SERPAPI_API_KEY="your_actual_key_here"
+# 3. Restart your R session
+robust_serp_search <- function(query, start_idx = 0, num = 20, log_file = NULL) {
+  base_url <- "https://serpapi.com/search"
+
+  # Check for API key in environment
+  api_key <- Sys.getenv("SERPAPI_API_KEY")
+  if (api_key == "") {
+    log_progress("SERPAPI_API_KEY not found in environment variables.", log_file)
+    return(NULL)
+  }
+
+  retries <- 0
+  max_retries <- 3
+
+  while (retries <= max_retries) {
+    # Perform the GET request
+    res <- GET(
+      url = base_url,
+      query = list(
+        engine = "google_scholar",
+        q = query,
+        api_key = api_key,
+        start = start_idx,
+        num = num,
+        hl = "en"
+      )
+    )
+
+    # Check status
+    if (status_code(res) == 200) {
+      # Success: parse and return JSON
+      # We use simplifyVector = FALSE for predictable nested list structures
+      return(fromJSON(content(res, as = "text", encoding = "UTF-8"), simplifyVector = FALSE))
+    } else if (status_code(res) == 429) {
+      # Rate limited: wait and retry with exponential backoff
+      wait_time <- 2^retries + runif(1, 2, 5)
+      log_progress(sprintf("HTTP 429: Too Many Requests. Retrying in %.2f seconds...", wait_time), log_file)
+      Sys.sleep(wait_time)
+      retries <- retries + 1
+    } else {
+      # Other error: record and return NULL
+      err_msg <- try(content(res, as = "text", encoding = "UTF-8"), silent = TRUE)
+      log_progress(sprintf("SerpApi request failed with status %d: %s",
+                   status_code(res),
+                   if (inherits(err_msg, "try-error")) "Could not parse error message" else err_msg), log_file)
+      return(NULL)
+    }
+  }
+  log_progress("Max retries exceeded for SerpApi.", log_file)
+  return(NULL)
+}
+
+# Function to lookup full metadata (abstract, journal, DOI) from Semantic Scholar by title
+# Uses a two-stage approach: quoted search for exact match, then unquoted search with validation
+lookup_s2_metadata <- function(title, log_file = NULL) {
+  if (is.null(title) || is.na(title) || title == "") return(NULL)
+
+  # Clean title for better matching: remove [HTML], [PDF] tags and extra whitespace
+  clean_title <- str_remove_all(title, "\\[.*?\\]") %>% str_trim()
+  norm_target <- str_to_lower(str_replace_all(clean_title, "[^[:alnum:]]", ""))
+
+  base_url <- "https://api.semanticscholar.org/graph/v1/paper/search"
+
+  # Check for API key in environment
+  api_key <- Sys.getenv("SEMANTIC_SCHOLAR_API_KEY")
+  headers <- if (api_key != "") c(`x-api-key` = api_key) else NULL
+
+  # Internal helper to execute a query and validate results
+  execute_s2_query <- function(q_text, is_quoted = FALSE) {
+    retries <- 0
+    while (retries <= 2) {
+      Sys.sleep(1 + runif(1, 0, 1))
+      res <- try(GET(
+        url = base_url,
+        query = list(
+          query = q_text,
+          limit = if (is_quoted) 1 else 3,
+          fields = "abstract,title,journal,venue,externalIds"
+        ),
+        add_headers(.headers = headers),
+        timeout(10)
+      ), silent = TRUE)
+
+      if (inherits(res, "try-error")) return(NULL)
+
+      if (status_code(res) == 200) {
+        content_json <- fromJSON(content(res, as = "text", encoding = "UTF-8"), simplifyVector = FALSE)
+        if (!is.null(content_json$data) && length(content_json$data) > 0) {
+          # Check all candidates
+          for (candidate in content_json$data) {
+            s2_title <- as.character(candidate$title %||% "")
+            norm_s2 <- str_to_lower(str_replace_all(s2_title, "[^[:alnum:]]", ""))
+            if (norm_target == norm_s2 || str_detect(norm_s2, fixed(norm_target)) || str_detect(norm_target, fixed(norm_s2))) {
+               # Extract journal name
+               j_info <- candidate$journal
+               j_name <- if (is.list(j_info) && !is.null(j_info$name)) as.character(j_info$name) else as.character(candidate$venue %||% NA_character_)
+
+               # Extract DOI
+               doi <- candidate$externalIds$DOI %||% NA_character_
+
+               return(list(
+                 abstract = as.character(candidate$abstract %||% NA_character_),
+                 journal = j_name,
+                 doi = doi
+               ))
+            }
+          }
+        }
+        return("NOT_FOUND")
+      } else if (status_code(res) == 429) {
+        Sys.sleep(5 * (retries + 1))
+        retries <- retries + 1
+      } else {
+        return(NULL)
+      }
+    }
+    return(NULL)
+  }
+
+  # Stage 1: Quoted Search (Exact Match)
+  log_progress(sprintf("  Attempting exact match for: %s", clean_title), log_file)
+  result <- execute_s2_query(paste0("\"", clean_title, "\""), is_quoted = TRUE)
+
+  if (is.list(result)) {
+    log_progress("    Success: Exact match found.", log_file)
+    return(result)
+  }
+
+  # Stage 2: Unquoted Search (Fuzzy Match)
+  log_progress("    Exact match failed. Attempting fuzzy match...", log_file)
+  result <- execute_s2_query(clean_title, is_quoted = FALSE)
+
+  if (is.list(result)) {
+    log_progress("    Success: Fuzzy match validated.", log_file)
+    return(result)
+  } else if (identical(result, "NOT_FOUND")) {
+    log_progress("    Failed: Paper not found or no confident match.", log_file)
+  } else {
+    log_progress("    Failed: API error or rate limit.", log_file)
+  }
+
+  return(NULL)
+}
+
+# Function to lookup full journal name from CrossRef by DOI
+lookup_crossref_journal <- function(doi, log_file = NULL) {
+  if (is.null(doi) || is.na(doi) || doi == "") return(NULL)
+
+  base_url <- "https://api.crossref.org/works/"
+  url <- paste0(base_url, doi)
+
+  res <- try(GET(url, timeout(10)), silent = TRUE)
+
+  if (inherits(res, "try-error") || status_code(res) != 200) return(NULL)
+
+  content_json <- fromJSON(content(res, as = "text", encoding = "UTF-8"), simplifyVector = FALSE)
+
+  if (!is.null(content_json$message) &&
+      !is.null(content_json$message$`container-title`) &&
+      length(content_json$message$`container-title`) > 0) {
+    j_name <- content_json$message$`container-title`[[1]]
+    if (!is.null(j_name) && !is.na(j_name) && j_name != "") return(as.character(j_name))
+  }
+
+  return(NULL)
+}
+```
+
+# Define Processing Functions
+
+In this section, we define the data structures and functions needed to handle the search results from SerpApi.
+
+```{r define-processing-functions}
+# Function to convert paper data to RIS format
+create_ris_record <- function(paper) {
+  ris <- "TY  - JOUR"
+
+  if (!is.null(paper[["title"]]) && !is.na(paper[["title"]])) {
+    ris <- c(ris, paste0("TI  - ", paper[["title"]]))
+  }
+
+  authors <- unlist(paper[["authors"]])
+  if (length(authors) > 0) {
+    for (auth_name in authors) {
+      if (auth_name != "" && !is.na(auth_name)) {
+        ris <- c(ris, paste0("AU  - ", auth_name))
+      }
+    }
+  }
+
+  if (!is.null(paper[["year"]]) && !is.na(paper[["year"]])) {
+    ris <- c(ris, paste0("PY  - ", paper[["year"]]))
+  }
+
+  journal_info <- paper[["journal"]]
+  journal_name <- if (is.list(journal_info)) as.character(journal_info[["name"]] %||% NA_character_) else as.character(journal_info)
+  if (is.na(journal_name) || journal_name == "") journal_name <- as.character(paper[["venue"]] %||% NA_character_)
+  if (!is.na(journal_name) && journal_name != "") ris <- c(ris, paste0("JO  - ", journal_name))
+
+  ext_ids <- paper[["externalIds"]]
+  if (is.list(ext_ids) && !is.null(ext_ids[["DOI"]]) && !is.na(ext_ids[["DOI"]])) ris <- c(ris, paste0("DO  - ", ext_ids[["DOI"]]))
+
+  if (!is.null(paper[["abstract"]]) && !is.na(paper[["abstract"]])) {
+    clean_abstract <- str_replace_all(as.character(paper[["abstract"]]), "\\s+", " ")
+    ris <- c(ris, paste0("AB  - ", clean_abstract))
+  }
+
+  # Add M2 tag with search rank information
+  rank <- paper[["highest_search_rank"]]
+  if (is.null(rank) || is.na(rank)) rank <- paper[["search_rank"]]
+
+  if (!is.null(rank) && !is.na(rank)) {
+    formatted_rank <- sprintf("%04d", as.integer(rank))
+    ris <- c(ris, paste0("M2  - search_rank: ", formatted_rank))
+  }
+
+  ris <- c(ris, "ER  - ")
+  return(paste(ris, collapse = "\n"))
+}
+
+# Ensure the output directory exists
+output_dir <- here::here("output", "lit_search")
+if (!dir.exists(output_dir)) dir.create(output_dir, recursive = TRUE)
+
+# Function to log progress with UTC timestamps
+log_progress <- function(msg, log_file = NULL) {
+  ts <- format(Sys.time(), "%Y-%m-%d %H:%M:%S", tz = "UTC")
+  formatted_msg <- sprintf("[%s UTC] %s", ts, msg)
+  message(formatted_msg)
+  if (!is.null(log_file)) {
+    cat(formatted_msg, "\n", file = log_file, append = TRUE)
+  }
+}
+
+# Function to aggregate results and save to timestamped files
+save_search_outputs <- function(results_list, session_timestamp) {
+  if (length(results_list) == 0) return(NULL)
+
+  # 1. Aggregate results
+  combined_full_data <- map(results_list, ~ .x$full_data) %>% bind_rows()
+  combined_search_results <- map(results_list, ~ .x$display_data) %>% bind_rows()
+
+  # # Apply Comeau filtering if needed
+  # if (exists("use_comeau_query") && use_comeau_query) {
+  #   combined_search_results <- combined_search_results %>%
+  #     filter(str_detect(authors_full, regex("Comeau", ignore_case = TRUE)))
+  #   combined_full_data <- combined_full_data %>%
+  #     filter(title %in% combined_search_results$title)
+  # }
+
+  search_summary_data <- map(results_list, ~ .x$summary) %>% bind_rows() %>% filter(!is.na(total_matches))
+
+  # 2. Deduplicate
+  unique_full_data <- combined_full_data %>%
+    filter(!is.na(title)) %>%
+    group_by(title, year) %>%
+    mutate(
+      associated_queries = paste(unique(search_query), collapse = "; "),
+      highest_search_rank = min(search_rank)
+    ) %>%
+    arrange(search_rank) %>%
+    slice(1) %>% ungroup()
+
+  unique_papers <- combined_search_results %>%
+    filter(!is.na(title)) %>%
+    group_by(title, publication_year) %>%
+    mutate(
+      associated_queries = paste(unique(search_query), collapse = "; "),
+      highest_search_rank = min(search_rank)
+    ) %>%
+    arrange(search_rank) %>%
+    slice(1) %>% ungroup() %>% relocate(associated_queries, highest_search_rank, .after = last_col())
+
+  # 3. Filter for output limit
+  out_limit <- if (exists("paper_output")) paper_output else 20
+  unique_full_data_output <- unique_full_data %>% filter(search_rank <= out_limit)
+  unique_papers_output <- unique_papers %>% filter(search_rank <= out_limit)
+
+  # 4. Generate file paths
+  # file_prefix <- if (exists("use_comeau_query") && use_comeau_query) "comeau_" else ""
+  ris_path <- file.path(output_dir, paste0(file_prefix, "unique_results_", session_timestamp, ".ris"))
+  summary_path <- file.path(output_dir, paste0(file_prefix, "search_summary_", session_timestamp, ".csv"))
+  unique_csv_path <- file.path(output_dir, paste0(file_prefix, "unique_papers_", session_timestamp, ".csv"))
+  rds_path <- file.path(output_dir, paste0("search_state_", session_timestamp, ".rds"))
+
+  # 5. Write files
+  unique_ris_output <- unique_full_data_output %>% purrr::transpose() %>% map_chr(create_ris_record) %>% paste(collapse = "\n\n")
+  write_lines(unique_ris_output, ris_path)
+  write_csv(search_summary_data, summary_path)
+  write_csv(unique_papers, unique_csv_path)
+  saveRDS(results_list, rds_path)
+
+  return(list(
+    unique_full_data_output = unique_full_data_output,
+    unique_papers_output = unique_papers_output,
+    final_search_summary = search_summary_data,
+    combined_full_data = combined_full_data,
+    combined_search_results = combined_search_results
+  ))
+}
+
+# Define prototype tibbles with expected columns to ensure consistency even when empty
+# authors is a list of character vectors
+full_data_ptype <- tibble(
+  title = character(), authors = list(), year = integer(), publicationTypes = list(),
+  journal = list(), externalIds = list(), abstract = character(), venue = character(),
+  search_query = character(), search_rank = integer()
+)
+
+display_data_ptype <- tibble(
+  search_query = character(), first_author_last_name = character(),
+  publication_year = integer(), title = character(), journal_name = character(),
+  authors_full = character(), publication_type = character(),
+  search_rank = integer(), abstract = character(), doi = character()
+)
+
+summary_ptype <- tibble(search_query = character(), total_matches = integer())
+
+# Function to execute search and process data for a single query
+process_search_term <- function(query, log_file = NULL) {
+  log_progress(paste("Searching for:", query), log_file)
+
+  # Initial limit based on fixed parameter (may be updated if dynamic is enabled)
+  limit_to_use <- if (exists("paper_limit")) paper_limit else 20
+
+  all_hits <- list()
+  total_matches <- 0L
+  start_idx <- 0
+
+  while (length(all_hits) < limit_to_use) {
+    search_results <- robust_serp_search(
+      query = query,
+      start_idx = start_idx,
+      num = 20,
+      log_file = log_file
+    )
+
+    # Handle failed search
+    if (is.null(search_results)) {
+      if (length(all_hits) == 0) {
+        return(list(
+          full_data = full_data_ptype,
+          display_data = display_data_ptype,
+          summary = tibble(search_query = query, total_matches = NA_integer_),
+          failed = TRUE
+        ))
+      } else {
+        break
+      }
+    }
+
+    # Extract total matches once
+    if (start_idx == 0) {
+      search_info <- search_results[["search_information"]]
+      if (is.list(search_info) && !is.null(search_info[["total_results"]])) {
+        total_matches <- as.integer(search_info[["total_results"]])
+      }
+      log_progress(sprintf("  Found %d total matches.", total_matches), log_file)
+
+      # Handle dynamic paper limit
+      if (exists("use_dynamic_papers_limit") && use_dynamic_papers_limit) {
+        # Calculate dynamic limit based on fraction, min, and max parameters
+        frac <- if (exists("dynamic_fraction")) dynamic_fraction else 0.1
+        min_p <- if (exists("dynamic_min")) dynamic_min else 20
+        max_p <- if (exists("dynamic_max")) dynamic_max else 200
+
+        if (total_matches < min_p) {
+          limit_to_use <- total_matches
+        } else {
+          limit_to_use <- min(max_p, max(min_p, ceiling(total_matches * frac)))
+        }
+        log_progress(sprintf("  Dynamic limit calculated: retrieving up to %d papers.", limit_to_use), log_file)
+      }
+    }
+
+    hits <- search_results[["organic_results"]]
+    if (is.null(hits) || !is.list(hits) || length(hits) == 0) {
+      log_progress("  No more organic results found.", log_file)
+      break
+    }
+
+    all_hits <- c(all_hits, hits)
+    log_progress(sprintf("  Retrieved %d results so far...", length(all_hits)), log_file)
+
+    # Check if we've reached the limit
+    if (length(all_hits) >= limit_to_use) {
+      all_hits <- head(all_hits, limit_to_use)
+      break
+    }
+
+    # Check if there's a next page
+    pagination <- search_results[["serpapi_pagination"]]
+    if (!is.list(pagination) || is.null(pagination[["next"]])) {
+      break
+    }
+
+    start_idx <- start_idx + length(hits)
+    Sys.sleep(runif(1, 1, 2))
+  }
+
+  if (length(all_hits) == 0) {
+    return(list(
+      full_data = full_data_ptype,
+      display_data = display_data_ptype,
+      summary = tibble(search_query = query, total_matches = total_matches),
+      failed = FALSE
+    ))
+  }
+
+  # Helper to reformat author names to "Lastname, Firstname Initials"
+  reformat_author_name <- function(name) {
+    if (is.null(name) || is.na(name) || name == "") return(NA_character_)
+    name <- str_remove_all(name, "…") %>% str_trim()
+    if (name == "") return(NA_character_)
+    if (str_detect(name, ",")) return(name)
+    parts <- str_split(name, "\\s+")[[1]]
+    if (length(parts) > 1) {
+      return(paste0(tail(parts, 1), ", ", paste(head(parts, -1), collapse = " ")))
+    }
+    return(name)
+  }
+
+  # Parse SerpApi results into the common schema
+  parsed_data <- imap(all_hits, function(h, idx) {
+    if (!is.list(h)) return(NULL)
+
+    title <- if (!is.null(h[["title"]])) as.character(h[["title"]]) else NA_character_
+    snippet <- if (!is.null(h[["snippet"]])) as.character(h[["snippet"]]) else NA_character_
+
+    # Safely extract publication info
+    pub_info <- h[["publication_info"]]
+    summary_str <- if (is.list(pub_info) && !is.null(pub_info[["summary"]])) {
+      as.character(pub_info[["summary"]])
+    } else {
+      NA_character_
+    }
+
+    # Extract year
+    year_regex <- "\\b(19|20)\\d{2}\\b"
+    year <- if (!is.na(summary_str)) as.integer(str_extract(summary_str, year_regex)) else NA_integer_
+
+    # Authors parsing
+    # We aggregate authors from both 'authors' list and 'summary' string
+    names_found <- character()
+
+    # 1. Extract from structured 'authors' list
+    authors_data <- if (is.list(pub_info)) pub_info[["authors"]] else NULL
+    if (is.list(authors_data) && length(authors_data) > 0) {
+      names_found <- map_chr(authors_data, function(auth) {
+        if (is.list(auth)) as.character(auth[["name"]] %||% "") else as.character(auth)
+      })
+    }
+
+    # 2. Extract from 'summary' string (which often has more authors)
+    if (!is.na(summary_str)) {
+      authors_str_raw <- str_split(summary_str, "\\s+-\\s+")[[1]][1]
+      names_from_summary <- str_split(authors_str_raw, ",")[[1]] %>%
+        str_trim() %>%
+        str_remove_all("\\.\\.\\.") %>%
+        str_trim()
+      names_found <- unique(c(names_found, names_from_summary))
+    }
+
+    # Reformat all names
+    authors_final_vec <- names_found %>%
+      discard(~ .x == "") %>%
+      map_chr(reformat_author_name) %>%
+      discard(is.na) %>%
+      unique()
+
+    # Journal parsing
+    parts <- if (!is.na(summary_str)) str_split(summary_str, "\\s+-\\s+")[[1]] else character()
+    journal_info <- if (length(parts) >= 2) {
+      j <- str_remove(parts[2], ",?\\s*\\b\\d{4}\\b") %>% str_trim()
+      if (j == "") NA_character_ else j
+    } else {
+      NA_character_
+    }
+
+    # Lookup full metadata from Semantic Scholar if requested
+    s2_metadata <- if (exists("use_full_abstract_lookup") && use_full_abstract_lookup) {
+      # Clean title to remove prefixes like [HTML] or [PDF]
+      lookup_title <- str_remove_all(title, "\\[.*?\\]") %>% str_trim()
+      lookup_s2_metadata(lookup_title, log_file = log_file)
+    } else {
+      NULL
+    }
+
+    # Use Authoritative journal name if available and Google Scholar version looks truncated
+    # Priority: CrossRef (via DOI) > Semantic Scholar > Google Scholar
+    final_journal <- journal_info
+    found_doi <- NA_character_
+
+    if (is.list(s2_metadata)) {
+      s2_j <- s2_metadata$journal
+      s2_abs <- s2_metadata$abstract
+      found_doi <- s2_metadata$doi
+
+      # Try CrossRef if we have a DOI
+      cr_j <- if (!is.na(found_doi)) lookup_crossref_journal(found_doi, log_file = log_file) else NULL
+
+      # Check for truncation in GS journal name (literal ... or Unicode …)
+      is_gs_truncated <- is.na(journal_info) || str_detect(journal_info, "\\.\\.\\.|…")
+
+      if (is_gs_truncated) {
+        if (!is.null(cr_j)) {
+          final_journal <- cr_j
+        } else if (!is.null(s2_j) && !is.na(s2_j)) {
+          final_journal <- s2_j
+        }
+      }
+    }
+
+    # Final cleanup: strip any residual ellipses from the chosen name
+    if (!is.na(final_journal)) {
+      final_journal <- str_remove_all(final_journal, "\\.\\.\\.|…") %>% str_trim()
+    }
+
+    # Construct the paper tibble (1 row)
+    tibble(
+      title = title,
+      authors = list(authors_final_vec),
+      year = year,
+      publicationTypes = list("Journal Article"),
+      journal = list(list(name = final_journal)),
+      externalIds = list(list(DOI = found_doi)),
+      abstract = if (is.list(s2_metadata) && !is.null(s2_metadata$abstract) && !is.na(s2_metadata$abstract)) s2_metadata$abstract else snippet,
+      venue = final_journal,
+      search_query = query,
+      search_rank = as.integer(idx)
+    )
+  }) %>% compact()
+
+  if (length(parsed_data) == 0) {
+    return(list(
+      full_data = full_data_ptype,
+      display_data = display_data_ptype,
+      summary = tibble(search_query = query, total_matches = total_matches),
+      failed = FALSE
+    ))
+  }
+
+  # Combine rows
+  data_norm <- bind_rows(parsed_data)
+
+  # Process into final display dataframe format
+  papers_df <- data_norm %>%
+    mutate(
+      first_author_last_name = map_chr(authors, function(auth_vec) {
+        if (length(auth_vec) == 0) return(NA_character_)
+        full_name <- auth_vec[1]
+        str_split(full_name, ",")[[1]] %>% head(1) %>% str_trim()
+      }),
+      journal_name = map_chr(journal, function(j) {
+        if (is.list(j)) as.character(j[["name"]] %||% NA_character_) else as.character(j)
+      }),
+      authors_full = map_chr(authors, ~ paste(.x, collapse = ", ")),
+      publication_type = map_chr(publicationTypes, ~ paste(unlist(.x), collapse = ", ")),
+      doi = map_chr(externalIds, function(ids) {
+        if (is.list(ids)) as.character(ids[["DOI"]] %||% NA_character_) else NA_character_
+      })
+    ) %>%
+    select(
+      search_query,
+      first_author_last_name,
+      publication_year = year,
+      title,
+      journal_name,
+      authors_full,
+      publication_type,
+      search_rank,
+      abstract,
+      doi
+    )
+
+  return(list(
+    full_data = data_norm,
+    display_data = papers_df,
+    summary = tibble(search_query = query, total_matches = total_matches),
+    failed = FALSE
+  ))
+}
+```
+
+
+# Perform Search
+
+```{r run-search-queries}
+# 1. Session Initialization
+session_timestamp <- format(Sys.time(), "%Y%m%d_%H%M%S", tz = "UTC")
+current_log_file <- file.path(output_dir, paste0("search_log_", session_timestamp, ".txt"))
+search_start_time <- Sys.time()
+
+log_progress(paste("Starting search session:", session_timestamp), current_log_file)
+
+# Prepare queries to run
+queries_to_run <- search_queries %>% sample()
+if (exists("queries_limit") && !is.null(queries_limit)) queries_to_run <- head(queries_to_run, queries_limit)
+
+search_results_list <- list()
+
+# 2. Resumption Logic
+if (exists("resume_search") && resume_search && exists("checkpoint_to_resume") && checkpoint_to_resume != "") {
+  if (file.exists(checkpoint_to_resume)) {
+    log_progress(paste("Resuming search from checkpoint:", checkpoint_to_resume), current_log_file)
+    search_results_list <- readRDS(checkpoint_to_resume)
+    completed_queries <- map_chr(search_results_list, ~ .x$summary$search_query)
+    queries_to_run <- setdiff(queries_to_run, completed_queries)
+    log_progress(sprintf("Loaded %d completed results. %d queries remaining.", length(search_results_list), length(queries_to_run)), current_log_file)
+  } else {
+    log_progress(paste("Checkpoint file not found:", checkpoint_to_resume, ". Starting from scratch."), current_log_file)
+  }
+}
+
+# 3. Execute Search Loop
+if (length(queries_to_run) > 0) {
+  for (q in queries_to_run) {
+    res <- process_search_term(q, log_file = current_log_file)
+    search_results_list <- c(search_results_list, list(res))
+
+    # Periodic Save
+    log_progress("Saving intermediate results...", current_log_file)
+    save_search_outputs(search_results_list, session_timestamp)
+
+    Sys.sleep(runif(1, 2, 5))
+  }
+} else {
+  log_progress("No new queries to run.", current_log_file)
+}
+
+search_end_time <- Sys.time()
+search_duration <- search_end_time - search_start_time
+log_progress(sprintf("Search session completed in: %.2f %s", search_duration, attr(search_duration, "units")), current_log_file)
+```
+
+# Aggregate and Deduplicate Results
+
+```{r aggregate-and-deduplicate}
+# Final save and result extraction
+final_outputs <- save_search_outputs(search_results_list, session_timestamp)
+
+if (!is.null(final_outputs)) {
+  unique_full_data_output <- final_outputs$unique_full_data_output
+  unique_papers_output <- final_outputs$unique_papers_output
+  search_summary_data <- final_outputs$final_search_summary
+  combined_full_data <- final_outputs$combined_full_data
+  combined_search_results <- final_outputs$combined_search_results
+} else {
+  unique_full_data_output <- full_data_ptype
+  unique_papers_output <- display_data_ptype
+  search_summary_data <- summary_ptype
+  combined_full_data <- full_data_ptype
+  combined_search_results <- display_data_ptype
+}
+
+failed_queries_data <- map(search_results_list, function(res) {
+  if (res$failed) return(res$summary %>% select(search_query))
+  return(NULL)
+}) %>% compact() %>% bind_rows()
+if (nrow(failed_queries_data) == 0) failed_queries_data <- tibble(search_query = character())
+```
+
+
+# Search Summary
+
+```{r search-summary}
+unique_term_summary <- unique_papers_output %>%
+  separate_longer_delim(associated_queries, delim = "; ") %>%
+  count(associated_queries, name = "retrieved_unique_papers")
+
+final_search_summary <- search_summary_data %>%
+  left_join(unique_term_summary, by = c("search_query" = "associated_queries")) %>%
+  mutate(retrieved_unique_papers = coalesce(retrieved_unique_papers, 0L))
+
+final_search_summary %>%
+  gt() %>%
+  tab_header(
+    title = "Literature Search Summary (SerpApi)",
+    subtitle = "Total database matches and retrieved unique papers per search term"
+  ) %>%
+  cols_label(.list = list(search_query = "Search Query", total_matches = "Total Matches", retrieved_unique_papers = "Unique Papers"))
+```
+
+# Unique Paper Statistics
+
+```{r unique-paper-stats}
+total_unique <- nrow(unique_papers_output)
+most_represented <- if (nrow(unique_term_summary) > 0) {
+  unique_term_summary %>% filter(retrieved_unique_papers == max(retrieved_unique_papers)) %>% summarize(term = paste(associated_queries, collapse = "; "), count = first(retrieved_unique_papers))
+} else { tibble(term = NA_character_, count = 0L) }
+least_represented <- if (nrow(unique_term_summary) > 0) {
+  unique_term_summary %>% filter(retrieved_unique_papers == min(retrieved_unique_papers)) %>% summarize(term = paste(associated_queries, collapse = "; "), count = first(retrieved_unique_papers))
+} else { tibble(term = NA_character_, count = 0L) }
+
+tibble(Metric = c("Total Unique Papers", "Most Represented Search Term(s)", "Least Represented Search Term(s)"), Value = c(as.character(total_unique), paste0(most_represented$term, " (", most_represented$count, " papers)"), paste0(least_represented$term, " (", least_represented$count, " papers)"))) %>%
+  gt() %>% tab_header(title = "Unique Paper Overview")
+```
+
+# Display Results
+
+```{r display-unique-results}
+unique_papers_output %>%
+  select(any_of(c("highest_search_rank", "first_author_last_name", "publication_year", "title", "associated_queries", "journal_name"))) %>%
+  arrange(highest_search_rank) %>%
+  gt() %>% tab_header(title = "Unique Search Results", subtitle = paste0("Total Unique Papers: ", nrow(unique_papers_output))) %>%
+  cols_label(.list = list(highest_search_rank = "Highest Rank", first_author_last_name = "Author", publication_year = "Year", title = "Title", journal_name = "Journal", associated_queries = "Associated Queries"))
+```
+
+
+# Failed Searches
+
+```{r failed-searches}
+if (nrow(failed_queries_data) > 0) {
+  failed_queries_data %>% gt() %>% tab_header(title = "Failed Search Terms") %>% cols_label(.list = list(search_query = "Search Query"))
+} else { cat("All search terms were successfully queried.") }
+```
+
+# Download Results
+
+The following files have been generated in `output/lit_search/` for this session (**`r session_timestamp`**):
+
+`r
+file_prefix <- if (exists("use_comeau_query") && use_comeau_query) "comeau_" else ""
+paste0(
+  "- **Progress Log:** [search_log_", session_timestamp, ".txt](output/lit_search/search_log_", session_timestamp, ".txt)\n",
+  "- **RIS Citations:** [", file_prefix, "unique_results_", session_timestamp, ".ris](output/lit_search/", file_prefix, "unique_results_", session_timestamp, ".ris)\n",
+  "- **Search Summary CSV:** [", file_prefix, "search_summary_", session_timestamp, ".csv](output/lit_search/", file_prefix, "search_summary_", session_timestamp, ".csv)\n",
+  "- **Unique Papers CSV:** [", file_prefix, "unique_papers_", session_timestamp, ".csv](output/lit_search/", file_prefix, "unique_papers_", session_timestamp, ".csv)\n",
+  "- **Checkpoint (RDS):** [search_state_", session_timestamp, ".rds](output/lit_search/search_state_", session_timestamp, ".rds)"
+)
+`

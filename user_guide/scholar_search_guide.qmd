@@ -89,7 +89,7 @@ This is the standardized citation file. You can import this file directly into c
 
 ### 3. Search Summary (`search_summary_*.csv`)
 
-A high-level diagnostic log showing how many queries succeeded. The columns in this table are: \* **`search_query`**: The exact boolean string sent to the API. \* **`total_matches`**: The estimated total number of indexable papers Google Scholar claims match the query. *(Note: This is often a highly optimistic estimate and rarely represents the true number of viewable pages).* \* **`retrieved`**: The actual number of papers the app successfully scraped and downloaded. \* **`search_status`**: Indicates if the query was `successful` or if it `failed (see log)` due to an API error, rate limit, or timeout.
+A high-level diagnostic log showing how many queries succeeded. The columns in this table are: \* **`search_query`**: The exact boolean string sent to the API. \* **`total_matches`**: The estimated total number of indexable papers Google Scholar claims match the query. *(Note: This is often a highly optimistic estimate and rarely represents the true number of viewable pages).* \* **`retrieved`**: The actual number of papers the app successfully scraped and downloaded. \* **`fraction_with_abstract`**: The decimal fraction (e.g., 0.85 = 85%) of the retrieved papers that successfully included a full abstract. \* **`search_status`**: Indicates if the query was `successful` or if it `failed (see log)` due to an API error, rate limit, or timeout.
 
 ### 4. Search Log (`search_log_*.txt`)
 

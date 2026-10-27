@@ -114,7 +114,10 @@ You may notice that running a search in this app returns a different number of r
 
 ## Common Errors
 
--   **Queries marked as "Failed" in the Summary Table:** If a query shows `TRUE` in the `failed` column of the `search_summary_*.csv`, it means the API request timed out, hit a hard rate limit, or encountered a severe error. To troubleshoot, open the corresponding `search_log_*.txt` file in your output directory and look for the specific query. The log will usually indicate whether it was an HTTP 429 (Too Many Requests), a SerpApi credential issue, or a network timeout. 
+-   **Queries marked as "Failed" in the Summary Table:** If a query shows `TRUE` in the `failed` column of the `search_summary_*.csv`, it means the API request timed out, hit a hard rate limit, or encountered a severe error. To troubleshoot, open the corresponding `search_log_*.txt` file in your output directory and look for the specific query. 
+    -   *HTTP 429 (Too Many Requests)*: SerpApi or Google Scholar is rate-limiting you. Wait a few minutes and re-run only the failed queries by isolating them in a new CSV. 
+    -   *API credential/key errors*: Verify your SerpApi key has not expired or run out of monthly credits. 
+    -   *Network timeouts*: This is usually temporary; retry the search later. 
 -   **Zero Results or "SerpApi connection failed":** Double-check that your SerpApi key is valid and that you have remaining search credits on your account.
 -   **Fewer Results Than Expected:** See the *API vs. Web Browser Discrepancies* section above.
 -   **App Hangs/Pauses:** The app has built-in rate-limiting and backoffs to prevent you from being banned by SerpApi or Semantic Scholar. Let it run; it will often pause for several seconds between requests intentionally, especially when looking up metadata.

@@ -43,15 +43,23 @@ normalize_serpapi_key <- function(api_key) {
 
 robust_serp_search <- function(query, api_key, start_idx = 0, num = 20,
                                log_file = NULL, log_callback = NULL,
-                               max_retries = 3) {
+                               max_retries = 3, year_low = NULL, year_high = NULL) {
   api_key <- normalize_serpapi_key(api_key)
   if (!nzchar(api_key)) stop("A SerpApi key is required.")
+  
+  query_params <- list(engine = "google_scholar", q = query, api_key = api_key,
+                       start = start_idx, num = num, hl = "en")
+  
+  if (!is.null(year_low) && !is.null(year_high)) {
+    query_params$as_ylo <- year_low
+    query_params$as_yhi <- year_high
+  }
+
   for (attempt in seq.int(0L, max_retries)) {
     response <- tryCatch(
       httr::GET(
         "https://serpapi.com/search",
-        query = list(engine = "google_scholar", q = query, api_key = api_key,
-                     start = start_idx, num = num, hl = "en"),
+        query = query_params,
         httr::timeout(30)
       ),
       error = function(e) NULL
@@ -203,7 +211,7 @@ process_single_search_term <- function(
     query, api_key, paper_limit = 100, use_dynamic_papers_limit = FALSE,
     dynamic_fraction = 0.1, dynamic_min = 20, dynamic_max = 200,
     use_full_abstract_lookup = TRUE, s2_api_key = "",
-    log_file = NULL, log_callback = NULL) {
+    log_file = NULL, log_callback = NULL, year_low = NULL, year_high = NULL) {
   serp_log(paste("Searching for:", query), log_file, log_callback)
   limit <- paper_limit
   hits <- list()
@@ -213,7 +221,8 @@ process_single_search_term <- function(
   while (length(hits) < limit) {
     result <- robust_serp_search(
       query, api_key, start_idx = start_idx, num = 20,
-      log_file = log_file, log_callback = log_callback
+      log_file = log_file, log_callback = log_callback,
+      year_low = year_low, year_high = year_high
     )
     if (is.null(result)) {
       failed <- TRUE

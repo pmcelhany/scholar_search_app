@@ -3,6 +3,19 @@ mod_serp_search_server <- function(id) {
     logs <- shiny::reactiveVal(character())
     status <- shiny::reactiveVal("Upload a CSV and configure the search.")
     results <- shiny::reactiveVal(NULL)
+    
+    roots <- c(Home = fs::path_home(), WorkingDir = getwd(), Root = "/")
+    shinyFiles::shinyDirChoose(input, "output_dir_btn", roots = roots, session = session)
+    
+    shiny::observe({
+      if (!is.integer(input$output_dir_btn)) {
+        dir_path <- shinyFiles::parseDirPath(roots, input$output_dir_btn)
+        if (length(dir_path) > 0) {
+          shiny::updateTextInput(session, "output_dir", value = dir_path)
+        }
+      }
+    })
+
     output$status_banner <- shiny::renderUI(
       shiny::div(class = "alert alert-info", role = "status", status())
     )
@@ -99,7 +112,9 @@ mod_serp_search_server <- function(id) {
               year_high = if (isTRUE(input$filter_by_year)) input$year_high else NULL
             )
             # Persist completed queries so later failures do not discard results.
-            results(save_search_outputs(collected, output_dir, timestamp, do_deduplicate = isTRUE(input$deduplicate)))
+            results(save_search_outputs(collected, output_dir, timestamp, 
+                                        do_deduplicate = isTRUE(input$deduplicate),
+                                        file_prefix = trimws(input$file_prefix)))
             shiny::incProgress(1 / length(queries),
                                 detail = sprintf("Query %d of %d", index, length(queries)))
           }

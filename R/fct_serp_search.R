@@ -345,9 +345,19 @@ save_search_outputs <- function(results_list, output_dir, session_timestamp) {
   )
   records <- purrr::map_chr(purrr::transpose(unique_full), create_ris_record)
   writeLines(paste(records, collapse = "\n\n"), paths[["ris"]], useBytes = TRUE)
-  utils::write.csv(summaries, paths[["summary"]], row.names = FALSE, na = "",
+  csv_safe <- function(data) {
+    # CSV quoting alone does not prevent spreadsheet formulas in API metadata.
+    for (column in names(data)) {
+      if (!is.character(data[[column]])) next
+      formula <- !is.na(data[[column]]) &
+        grepl("^[[:space:]]*[=+@-]", data[[column]])
+      data[[column]][formula] <- paste0("'", data[[column]][formula])
+    }
+    data
+  }
+  utils::write.csv(csv_safe(summaries), paths[["summary"]], row.names = FALSE, na = "",
                    fileEncoding = "UTF-8")
-  utils::write.csv(unique_papers, paths[["papers"]], row.names = FALSE, na = "",
+  utils::write.csv(csv_safe(unique_papers), paths[["papers"]], row.names = FALSE, na = "",
                    fileEncoding = "UTF-8")
   saveRDS(results_list, paths[["checkpoint"]])
   serp_log(sprintf("Saved %d unique papers and %d query summaries.",

@@ -40,7 +40,9 @@ mod_serp_search_server <- function(id) {
         if (is.null(input$csv_file) || !file.exists(input$csv_file$datapath)) {
           stop("Please upload a search terms CSV.")
         }
-        if (is.null(input$serpapi_key) || !nzchar(trimws(input$serpapi_key))) {
+        api_key <- if (is.null(input$serpapi_key)) "" else trimws(input$serpapi_key)
+        if (!nzchar(api_key)) api_key <- trimws(Sys.getenv("SERPAPI_API_KEY", ""))
+        if (!nzchar(api_key)) {
           stop("Please provide a SerpApi key.")
         }
         if (!valid_number(input$paper_limit, 1, integer = TRUE)) {
@@ -73,7 +75,7 @@ mod_serp_search_server <- function(id) {
           for (index in seq_along(queries)) {
             update_status(sprintf("Searching query %d of %d.", index, length(queries)))
             collected[[index]] <- process_single_search_term(
-              query = queries[index], api_key = trimws(input$serpapi_key),
+              query = queries[index], api_key = api_key,
               paper_limit = input$paper_limit,
               use_dynamic_papers_limit = isTRUE(input$use_dynamic_papers_limit),
               dynamic_fraction = input$dynamic_fraction,

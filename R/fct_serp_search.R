@@ -88,6 +88,19 @@ robust_serp_search <- function(query, api_key, start_idx = 0, num = 20,
                log_file, log_callback)
       return(NULL)
     }
+    
+    # Check if the 429 is due to empty credits rather than throughput limits
+    error_body <- tryCatch(
+      jsonlite::fromJSON(httr::content(response, as = "text", encoding = "UTF-8"), simplifyVector = FALSE),
+      error = function(e) NULL
+    )
+    if (is.list(error_body) && !is.null(error_body$error) && 
+        grepl("run out of searches", error_body$error, ignore.case = TRUE)) {
+      serp_log("CRITICAL: SerpApi account has run out of searches.", log_file, log_callback)
+      # Return a specific string to signal hard failure to the caller
+      return("OUT_OF_CREDITS")
+    }
+
     if (attempt < max_retries) {
       delay <- 2^attempt + stats::runif(1, 2, 5)
       serp_log(sprintf("HTTP 429: retrying in %.2f seconds.", delay),
@@ -224,6 +237,11 @@ process_single_search_term <- function(
       log_file = log_file, log_callback = log_callback,
       year_low = year_low, year_high = year_high
     )
+    
+    if (identical(result, "OUT_OF_CREDITS")) {
+      return(list(failed = TRUE, out_of_credits = TRUE))
+    }
+    
     if (is.null(result)) {
       failed <- TRUE
       break
@@ -296,7 +314,8 @@ process_single_search_term <- function(
     full_data = full_data, display_data = serp_display_papers(full_data),
     summary = dplyr::tibble(search_query = query, total_matches = total_matches,
                            retrieved = nrow(full_data), failed = failed),
-    failed = failed
+    failed = failed,
+    out_of_credits = FALSE
   )
 }
 
@@ -330,13 +349,14 @@ save_search_outputs <- function(results_list, output_dir, session_timestamp,
     stop("Cannot create the output directory.")
   }
   full_data <- dplyr::bind_rows(c(
-    list(serp_empty_papers()), purrr::map(results_list, "full_data")
+    list(serp_empty_papers()), 
+    purrr::map(purrr::keep(results_list, ~!isTRUE(.x$out_of_credits)), "full_data")
   ))
   display_data <- serp_display_papers(full_data)
   summaries <- dplyr::bind_rows(c(
     list(dplyr::tibble(search_query = character(), total_matches = double(),
                        retrieved = integer(), failed = logical())),
-    purrr::map(results_list, "summary")
+    purrr::map(purrr::keep(results_list, ~!isTRUE(.x$out_of_credits)), "summary")
   ))
   deduplicate <- function(data, year_column) {
     data <- data[!is.na(data$title) & nzchar(trimws(data$title)), , drop = FALSE]

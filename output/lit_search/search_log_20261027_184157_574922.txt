@@ -1,0 +1,41 @@
+[2026-10-27 18:41:57 UTC] Starting search session: 20261027_184157_574922 
+[2026-10-27 18:41:57 UTC] Searching for: jello AND cat 
+[2026-10-27 18:41:57 UTC]   Total matches: 2240 
+[2026-10-27 18:41:57 UTC]   Retrieved 10 papers. 
+[2026-10-27 18:41:57 UTC]   Attempting exact metadata match for: Feline lower urinary tract disorders: definition of terms and concepts 
+[2026-10-27 18:42:00 UTC]   Attempting exact metadata match for: Ciguatoxin from the flesh and viscera of the barracuda, Sphyraena jello 
+[2026-10-27 18:42:19 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:42:21 UTC]   Attempting exact metadata match for: Feline urethral plugs: Etiology and pathophysiology 
+[2026-10-27 18:42:24 UTC]   Attempting exact metadata match for: Safe Autumn Treats for Dogs and Cats 
+[2026-10-27 18:42:43 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:42:44 UTC]   Attempting exact metadata match for: Mystery, Murder, Misery and Meat 
+[2026-10-27 18:42:52 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:43:13 UTC]   Attempting exact metadata match for: “When the monsters come jello them”: Fatherhood, Vulnerability, and the Magic of the Mundane in James Kochalka's American Elf 
+[2026-10-27 18:43:15 UTC]   Attempting exact metadata match for: Feline matrix‐crystalline urethral plugs: a unifying hypothesis of causes 
+[2026-10-27 18:43:17 UTC]   Attempting exact metadata match for: " What's on Their Plates?" or Feeding the Hungry Mouths: Laborers, Families, and Food in the Late Twentieth Century 
+[2026-10-27 18:43:20 UTC]   Attempting exact metadata match for: The cat ate my gymsuit 
+[2026-10-27 18:43:22 UTC]   Attempting exact metadata match for: The Fisher Cat 
+[2026-10-27 18:43:43 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:43:46 UTC] Saved 10 unique papers and 1 query summaries. 
+[2026-10-27 18:43:46 UTC] Searching for: lobster AND mcdr 
+[2026-10-27 18:43:46 UTC]   Total matches: 27 
+[2026-10-27 18:43:46 UTC]   Retrieved 10 papers. 
+[2026-10-27 18:43:46 UTC]   Attempting exact metadata match for: Navigating (Un) charted Waters: Lessons from WHOI's LOC-NESS Ocean Alkalinity Enhancement Field Trial for 
+[2026-10-27 18:43:54 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:43:56 UTC]   Attempting exact metadata match for: Development of the ecological activity index as an integrative ecosystem assessment and monitoring asset for ocean alkalinity enhancement 
+[2026-10-27 18:44:16 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:44:18 UTC]   Attempting exact metadata match for: Field notes on public communication and engagement for the LOC-NESS Ocean Alkalinity Enhancement field trial 
+[2026-10-27 18:44:37 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:44:57 UTC]   Attempting exact metadata match for: Ocean and coastal acidification monitoring priorities for the northeast US and eastern Canada 
+[2026-10-27 18:45:17 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:45:37 UTC]   Attempting exact metadata match for: Sea Grant Network Contributions to the National Ocean and Coastal Acidification Response 
+[2026-10-27 18:45:39 UTC]   Attempting exact metadata match for: A high-resolution coupled physical-biogeochemical model of the northeastern US continental shelf: MOM6-COBALT-NEUS25v1. 0 
+[2026-10-27 18:45:58 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:46:06 UTC]   Attempting exact metadata match for: Biological thresholds for marine carbon dioxide removal (mCDR): the effect of changes in carbonate chemistry 
+[2026-10-27 18:46:25 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:46:45 UTC]   Attempting exact metadata match for: Full Fathom Five: Industrial Fishing, Carbon, and the Economics of Extinction 
+[2026-10-27 18:46:47 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:47:07 UTC]   Attempting exact metadata match for: Copepod growth in detail: pattern similarity to decapod larvae 
+[2026-10-27 18:47:09 UTC]   Attempting exact metadata match for: Genetic population structure and tools for the management of European sprat (Sprattus sprattus) 
+[2026-10-27 18:47:18 UTC] Saved 20 unique papers and 2 query summaries. 
+[2026-10-27 18:47:18 UTC] Finished: 20 unique papers; 0 failed or partial queries. Saved to output/lit_search 

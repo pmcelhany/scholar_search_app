@@ -1,0 +1,29 @@
+[2026-10-27 18:54:02 UTC] Starting search session: 20261027_185402_917493 
+[2026-10-27 18:54:02 UTC] Searching for: jello AND cat 
+[2026-10-27 18:54:04 UTC]   Total matches: 117 
+[2026-10-27 18:54:04 UTC]   Retrieved 4 papers. 
+[2026-10-27 18:54:07 UTC]   Retrieved 5 papers. 
+[2026-10-27 18:54:07 UTC]   Attempting exact metadata match for: Prevailing Culinary, Psychological, and Metaphysical Conditions: Meatballs and Reality 
+[2026-10-27 18:54:28 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:54:48 UTC]   Attempting exact metadata match for: Big fierce animals of Hong Kong 
+[2026-10-27 18:54:57 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:55:05 UTC]   Attempting exact metadata match for: The administration of Fumaria parviflora extract to regulate glucose and insulin level, alongside iron accumulation and renal histopathological alterations in … 
+[2026-10-27 18:55:24 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:55:32 UTC]   Attempting exact metadata match for: Development of a Point-of-Care Rapid Test for The Detection of Bovine Viral Diarrhea Antibodies in Bovine Blood 
+[2026-10-27 18:55:41 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:56:00 UTC]   Attempting exact metadata match for: Ciguatera and ciguatoxin-like substances in fishes, especially Scomberomorus commersoni from southern Queensland 
+[2026-10-27 18:56:02 UTC] Saved 5 unique papers and 1 query summaries. 
+[2026-10-27 18:56:02 UTC] Searching for: lobster AND mcdr 
+[2026-10-27 18:56:02 UTC]   Total matches: 27 
+[2026-10-27 18:56:02 UTC]   Retrieved 5 papers. 
+[2026-10-27 18:56:02 UTC]   Attempting exact metadata match for: Navigating (Un) charted Waters: Lessons from WHOI's LOC-NESS Ocean Alkalinity Enhancement Field Trial for 
+[2026-10-27 18:56:24 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:56:26 UTC]   Attempting exact metadata match for: Development of the ecological activity index as an integrative ecosystem assessment and monitoring asset for ocean alkalinity enhancement 
+[2026-10-27 18:56:34 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:56:42 UTC]   Attempting exact metadata match for: Field notes on public communication and engagement for the LOC-NESS Ocean Alkalinity Enhancement field trial 
+[2026-10-27 18:56:44 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:57:04 UTC]   Attempting exact metadata match for: Ocean and coastal acidification monitoring priorities for the northeast US and eastern Canada 
+[2026-10-27 18:57:12 UTC]   Exact match failed; attempting validated unquoted match. 
+[2026-10-27 18:57:13 UTC]   Attempting exact metadata match for: Sea Grant Network Contributions to the National Ocean and Coastal Acidification Response 
+[2026-10-27 18:57:33 UTC] Saved 10 unique papers and 2 query summaries. 
+[2026-10-27 18:57:33 UTC] Finished: 10 unique papers; 0 failed or partial queries. Saved to output/lit_search 

@@ -2,7 +2,7 @@
 pkgload::load_all(export_all = FALSE, helpers = FALSE, attach_testthat = FALSE)
 
 # Set to FALSE for development/debugging, TRUE for production behavior
-options("golem.app.prod" = TRUE)
+options("golem.app.prod" = FALSE)
 
 # Standard golem launch (R/run_app.R returns the shiny.appobj)
 #run_app()

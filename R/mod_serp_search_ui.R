@@ -42,9 +42,9 @@ mod_serp_search_ui <- function(id) {
         shiny::h3("Search log"),
         shiny::verbatimTextOutput(ns("log_output")),
         shiny::h3("Search summary"),
-        gt::gt_output(ns("summary_table")),
+        shiny::uiOutput(ns("summary_table")),
         shiny::h3("Unique papers"),
-        gt::gt_output(ns("results_table"))
+        shiny::uiOutput(ns("results_table"))
       )
     )
   )

@@ -322,7 +322,8 @@ create_ris_record <- function(paper) {
   paste(c(lines, "ER  - "), collapse = "\n")
 }
 
-save_search_outputs <- function(results_list, output_dir, session_timestamp, do_deduplicate = TRUE) {
+save_search_outputs <- function(results_list, output_dir, session_timestamp, 
+                                do_deduplicate = TRUE, file_prefix = "") {
   if (!grepl("^[A-Za-z0-9_-]+$", session_timestamp)) stop("Invalid session timestamp.")
   if (!dir.exists(output_dir) &&
       !dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)) {
@@ -360,13 +361,15 @@ save_search_outputs <- function(results_list, output_dir, session_timestamp, do_
   }
   unique_full <- deduplicate(full_data, "year")
   unique_papers <- deduplicate(display_data, "publication_year")
-  prefix <- if (do_deduplicate) "unique_" else "all_"
+  dedup_prefix <- if (do_deduplicate) "unique_" else "all_"
+  base_prefix <- if (nzchar(file_prefix)) paste0(file_prefix, "_") else ""
+  
   paths <- c(
-    log = file.path(output_dir, paste0("search_log_", session_timestamp, ".txt")),
-    ris = file.path(output_dir, paste0(prefix, "results_", session_timestamp, ".ris")),
-    summary = file.path(output_dir, paste0("search_summary_", session_timestamp, ".csv")),
-    papers = file.path(output_dir, paste0(prefix, "papers_", session_timestamp, ".csv")),
-    checkpoint = file.path(output_dir, paste0("search_state_", session_timestamp, ".rds"))
+    log = file.path(output_dir, paste0(base_prefix, "search_log_", session_timestamp, ".txt")),
+    ris = file.path(output_dir, paste0(base_prefix, dedup_prefix, "results_", session_timestamp, ".ris")),
+    summary = file.path(output_dir, paste0(base_prefix, "search_summary_", session_timestamp, ".csv")),
+    papers = file.path(output_dir, paste0(base_prefix, dedup_prefix, "papers_", session_timestamp, ".csv")),
+    checkpoint = file.path(output_dir, paste0(base_prefix, "search_state_", session_timestamp, ".rds"))
   )
   records <- purrr::map_chr(purrr::transpose(unique_full), create_ris_record)
   writeLines(paste(records, collapse = "\n\n"), paths[["ris"]], useBytes = TRUE)

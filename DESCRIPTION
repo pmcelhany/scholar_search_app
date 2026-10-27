@@ -6,13 +6,15 @@ Authors@R: person("Scholar Search", "Contributors", role = c("aut", "cre"),
 Description: A modular Shiny interface for multi-query Google Scholar searches
     through SerpApi, metadata enrichment, and deduplicated literature exports.
 Encoding: UTF-8
-Imports:
+Imports: 
     dplyr,
+    fs,
     gt,
     httr,
     jsonlite,
     purrr,
     shiny,
+    shinyFiles,
     stats,
     stringr,
     utils

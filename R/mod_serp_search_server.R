@@ -52,6 +52,14 @@ mod_serp_search_server <- function(id) {
         if (!valid_number(input$paper_limit, 1, integer = TRUE)) {
           stop("Fixed Paper Limit must be a positive whole number.")
         }
+        if (isTRUE(input$filter_by_year)) {
+          if (!valid_number(input$year_low, 1900, integer = TRUE) ||
+              !valid_number(input$year_high, 1900, integer = TRUE) ||
+              input$year_low > input$year_high) {
+            stop("Please provide a valid year range (From Year must be less than or equal to To Year).")
+          }
+        }
+        
         if (isTRUE(input$use_dynamic_papers_limit) &&
             (!valid_number(input$dynamic_fraction, 0.01, 1) ||
              !valid_number(input$dynamic_min, 1, integer = TRUE) ||
@@ -86,7 +94,9 @@ mod_serp_search_server <- function(id) {
               dynamic_min = input$dynamic_min, dynamic_max = input$dynamic_max,
               use_full_abstract_lookup = isTRUE(input$use_full_abstract_lookup),
               s2_api_key = Sys.getenv("SEMANTIC_SCHOLAR_API_KEY", ""),
-              log_file = log_file, log_callback = append_log
+              log_file = log_file, log_callback = append_log,
+              year_low = if (isTRUE(input$filter_by_year)) input$year_low else NULL,
+              year_high = if (isTRUE(input$filter_by_year)) input$year_high else NULL
             )
             # Persist completed queries so later failures do not discard results.
             results(save_search_outputs(collected, output_dir, timestamp, do_deduplicate = isTRUE(input$deduplicate)))

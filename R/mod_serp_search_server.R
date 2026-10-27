@@ -1,0 +1,112 @@
+mod_serp_search_server <- function(id) {
+  shiny::moduleServer(id, function(input, output, session) {
+    logs <- shiny::reactiveVal(character())
+    status <- shiny::reactiveVal("Upload a CSV and configure the search.")
+    results <- shiny::reactiveVal(NULL)
+    output$status_banner <- shiny::renderUI(
+      shiny::div(class = "alert alert-info", role = "status", status())
+    )
+    output$log_output <- shiny::renderText(paste(logs(), collapse = "\n"))
+    output$summary_table <- gt::render_gt({
+      shiny::req(results())
+      gt::gt(results()$final_search_summary)
+    })
+    output$results_table <- gt::render_gt({
+      shiny::req(results())
+      gt::gt(utils::head(results()$unique_papers_output, 100))
+    })
+    push_text <- function(id, text) {
+      session$sendCustomMessage("serp-search-progress",
+                                list(id = session$ns(id), text = text))
+    }
+    update_status <- function(text) {
+      status(text)
+      push_text("status_banner", text)
+    }
+    append_log <- function(line) {
+      logs(c(logs(), line))
+      push_text("log_output", paste(logs(), collapse = "\n"))
+    }
+    shiny::observeEvent(input$run_search, {
+      valid_number <- function(value, lower, upper = Inf, integer = FALSE) {
+        is.numeric(value) && length(value) == 1L && is.finite(value) &&
+          value >= lower && value <= upper && (!integer || value == floor(value))
+      }
+      log_file <- NULL
+      collected <- list()
+      output_dir <- NULL
+      timestamp <- NULL
+      tryCatch({
+        if (is.null(input$csv_file) || !file.exists(input$csv_file$datapath)) {
+          stop("Please upload a search terms CSV.")
+        }
+        if (is.null(input$serpapi_key) || !nzchar(trimws(input$serpapi_key))) {
+          stop("Please provide a SerpApi key.")
+        }
+        if (!valid_number(input$paper_limit, 1, integer = TRUE)) {
+          stop("Fixed Paper Limit must be a positive whole number.")
+        }
+        if (isTRUE(input$use_dynamic_papers_limit) &&
+            (!valid_number(input$dynamic_fraction, 0.01, 1) ||
+             !valid_number(input$dynamic_min, 1, integer = TRUE) ||
+             !valid_number(input$dynamic_max, 10, integer = TRUE) ||
+             input$dynamic_min > input$dynamic_max)) {
+          stop("Check the dynamic fraction and paper limits; minimum must not exceed maximum.")
+        }
+        if (is.null(input$output_dir) || !nzchar(trimws(input$output_dir))) {
+          stop("Please provide an output directory.")
+        }
+        queries <- parse_query_csv(input$csv_file$datapath, input$queries_pat)
+        output_dir <- path.expand(trimws(input$output_dir))
+        if (!dir.exists(output_dir) &&
+            !dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)) {
+          stop("Cannot create the output directory.")
+        }
+        if (file.access(output_dir, 2) != 0) stop("The output directory is not writable.")
+        timestamp <- gsub("\\.", "_", format(Sys.time(), "%Y%m%d_%H%M%OS6", tz = "UTC"))
+        log_file <- file.path(output_dir, paste0("search_log_", timestamp, ".txt"))
+        logs(character())
+        results(NULL)
+        update_status(sprintf("Searching %d queries...", length(queries)))
+        serp_log(paste("Starting search session:", timestamp), log_file, append_log)
+        shiny::withProgress(message = "Searching literature", value = 0, {
+          for (index in seq_along(queries)) {
+            update_status(sprintf("Searching query %d of %d.", index, length(queries)))
+            collected[[index]] <- process_single_search_term(
+              query = queries[index], api_key = trimws(input$serpapi_key),
+              paper_limit = input$paper_limit,
+              use_dynamic_papers_limit = isTRUE(input$use_dynamic_papers_limit),
+              dynamic_fraction = input$dynamic_fraction,
+              dynamic_min = input$dynamic_min, dynamic_max = input$dynamic_max,
+              use_full_abstract_lookup = isTRUE(input$use_full_abstract_lookup),
+              s2_api_key = Sys.getenv("SEMANTIC_SCHOLAR_API_KEY", ""),
+              log_file = log_file, log_callback = append_log
+            )
+            # Persist completed queries so later failures do not discard results.
+            results(save_search_outputs(collected, output_dir, timestamp))
+            shiny::incProgress(1 / length(queries),
+                                detail = sprintf("Query %d of %d", index, length(queries)))
+          }
+        })
+        failed <- sum(purrr::map_lgl(collected, "failed"))
+        message <- sprintf("Finished: %d unique papers; %d failed or partial queries. Saved to %s",
+                           nrow(results()$unique_papers_output), failed, output_dir)
+        serp_log(message, log_file, append_log)
+        update_status(message)
+        if (failed > 0) shiny::showNotification(
+          "Some queries failed or returned partial results. See the log.", type = "warning"
+        )
+      }, error = function(e) {
+        # Only validation messages are exposed; unexpected errors may include API URLs.
+        message <- if (is.null(log_file)) conditionMessage(e) else
+          "Search interrupted. Completed queries remain saved; check the output directory and API connectivity."
+        update_status(message)
+        if (!is.null(log_file)) {
+          try(serp_log(message, log_file, append_log), silent = TRUE)
+        }
+        shiny::showNotification(message, type = "error", duration = NULL)
+      })
+    })
+    invisible(results)
+  })
+}

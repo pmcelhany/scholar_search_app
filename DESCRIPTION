@@ -1,0 +1,23 @@
+Package: scholarsearchapp
+Title: Scholar Literature Search Application
+Version: 0.0.0.9000
+Authors@R: person("Scholar Search", "Contributors", role = c("aut", "cre"),
+    email = "noreply@github.com")
+Description: A modular Shiny interface for multi-query Google Scholar searches
+    through SerpApi, metadata enrichment, and deduplicated literature exports.
+License: GPL-3
+Encoding: UTF-8
+Imports:
+    dplyr,
+    gt,
+    httr,
+    jsonlite,
+    purrr,
+    shiny,
+    stats,
+    stringr,
+    utils
+Suggests:
+    devtools,
+    roxygen2
+RoxygenNote: 7.3.1

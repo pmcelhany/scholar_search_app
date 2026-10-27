@@ -7,13 +7,15 @@ mod_serp_search_server <- function(id) {
       shiny::div(class = "alert alert-info", role = "status", status())
     )
     output$log_output <- shiny::renderText(paste(logs(), collapse = "\n"))
-    output$summary_table <- gt::render_gt({
+    output$summary_table <- shiny::renderUI({
       shiny::req(results())
-      gt::gt(results()$final_search_summary)
+      shiny::HTML(gt::as_raw_html(gt::gt(results()$final_search_summary)))
     })
-    output$results_table <- gt::render_gt({
+    output$results_table <- shiny::renderUI({
       shiny::req(results())
-      gt::gt(utils::head(results()$unique_papers_output, 100))
+      shiny::HTML(gt::as_raw_html(
+        gt::gt(utils::head(results()$unique_papers_output, 100))
+      ))
     })
     push_text <- function(id, text) {
       session$sendCustomMessage("serp-search-progress",

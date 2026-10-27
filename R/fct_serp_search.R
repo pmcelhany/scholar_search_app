@@ -313,7 +313,7 @@ create_ris_record <- function(paper) {
   paste(c(lines, "ER  - "), collapse = "\n")
 }
 
-save_search_outputs <- function(results_list, output_dir, session_timestamp) {
+save_search_outputs <- function(results_list, output_dir, session_timestamp, do_deduplicate = TRUE) {
   if (!grepl("^[A-Za-z0-9_-]+$", session_timestamp)) stop("Invalid session timestamp.")
   if (!dir.exists(output_dir) &&
       !dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)) {
@@ -335,21 +335,28 @@ save_search_outputs <- function(results_list, output_dir, session_timestamp) {
       data$highest_search_rank <- integer()
       return(data)
     }
-    grouped <- dplyr::group_by_at(data, c("title", year_column))
-    grouped <- dplyr::mutate(
-      grouped, associated_queries = paste(unique(search_query), collapse = "; "),
-      highest_search_rank = min(search_rank)
-    )
-    dplyr::ungroup(dplyr::slice_min(grouped, order_by = search_rank,
-                                   n = 1, with_ties = FALSE))
+    if (do_deduplicate) {
+      grouped <- dplyr::group_by_at(data, c("title", year_column))
+      grouped <- dplyr::mutate(
+        grouped, associated_queries = paste(unique(search_query), collapse = "; "),
+        highest_search_rank = min(search_rank)
+      )
+      dplyr::ungroup(dplyr::slice_min(grouped, order_by = search_rank,
+                                     n = 1, with_ties = FALSE))
+    } else {
+      data$associated_queries <- data$search_query
+      data$highest_search_rank <- data$search_rank
+      data
+    }
   }
   unique_full <- deduplicate(full_data, "year")
   unique_papers <- deduplicate(display_data, "publication_year")
+  prefix <- if (do_deduplicate) "unique_" else "all_"
   paths <- c(
     log = file.path(output_dir, paste0("search_log_", session_timestamp, ".txt")),
-    ris = file.path(output_dir, paste0("unique_results_", session_timestamp, ".ris")),
+    ris = file.path(output_dir, paste0(prefix, "results_", session_timestamp, ".ris")),
     summary = file.path(output_dir, paste0("search_summary_", session_timestamp, ".csv")),
-    papers = file.path(output_dir, paste0("unique_papers_", session_timestamp, ".csv")),
+    papers = file.path(output_dir, paste0(prefix, "papers_", session_timestamp, ".csv")),
     checkpoint = file.path(output_dir, paste0("search_state_", session_timestamp, ".rds"))
   )
   records <- purrr::map_chr(purrr::transpose(unique_full), create_ris_record)
@@ -369,7 +376,7 @@ save_search_outputs <- function(results_list, output_dir, session_timestamp) {
   utils::write.csv(csv_safe(unique_papers), paths[["papers"]], row.names = FALSE, na = "",
                    fileEncoding = "UTF-8")
   saveRDS(results_list, paths[["checkpoint"]])
-  serp_log(sprintf("Saved %d unique papers and %d query summaries.",
+  serp_log(sprintf("Saved %d papers and %d query summaries.",
                    nrow(unique_papers), nrow(summaries)), paths[["log"]])
   list(unique_full_data_output = unique_full, unique_papers_output = unique_papers,
        final_search_summary = summaries, combined_full_data = full_data,

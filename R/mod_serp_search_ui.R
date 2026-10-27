@@ -31,6 +31,9 @@ mod_serp_search_ui <- function(id) {
         shiny::checkboxInput(ns("use_full_abstract_lookup"),
                              "Lookup Full Abstract (Semantic Scholar / CrossRef)",
                              value = TRUE),
+        shiny::checkboxInput(ns("deduplicate"),
+                             "Deduplicate Results",
+                             value = TRUE),
         shiny::textInput(ns("output_dir"), "Output Directory Path",
                          value = "output/lit_search"),
         shiny::helpText("Files are saved on the machine running this app."),
@@ -43,7 +46,7 @@ mod_serp_search_ui <- function(id) {
         shiny::verbatimTextOutput(ns("log_output")),
         shiny::h3("Search summary"),
         shiny::uiOutput(ns("summary_table")),
-        shiny::h3("Unique papers"),
+        shiny::h3("Search results"),
         shiny::uiOutput(ns("results_table"))
       )
     )

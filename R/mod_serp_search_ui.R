@@ -27,16 +27,6 @@ mod_serp_search_ui <- function(id) {
           )
         ),
         shiny::h4("Pagination Limits"),
-        shiny::h4("Search Filters"),
-        shiny::checkboxInput(ns("filter_by_year"), "Filter by Year Range", value = FALSE),
-        shiny::conditionalPanel(
-          condition = "input.filter_by_year", ns = ns,
-          shiny::fluidRow(
-            shiny::column(6, shiny::numericInput(ns("year_low"), "From Year", value = as.numeric(format(Sys.Date(), "%Y")) - 5, min = 1900, max = as.numeric(format(Sys.Date(), "%Y")) + 1)),
-            shiny::column(6, shiny::numericInput(ns("year_high"), "To Year", value = as.numeric(format(Sys.Date(), "%Y")), min = 1900, max = as.numeric(format(Sys.Date(), "%Y")) + 1))
-          )
-        ),
-        shiny::h4("Pagination Limits"),
         shiny::checkboxInput(ns("use_dynamic_papers_limit"),
                              "Enable Dynamic Paper Limit", value = FALSE),
         shiny::conditionalPanel(

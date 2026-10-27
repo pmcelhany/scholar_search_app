@@ -89,13 +89,13 @@ mod_serp_search_server <- function(id) {
               log_file = log_file, log_callback = append_log
             )
             # Persist completed queries so later failures do not discard results.
-            results(save_search_outputs(collected, output_dir, timestamp))
+            results(save_search_outputs(collected, output_dir, timestamp, do_deduplicate = isTRUE(input$deduplicate)))
             shiny::incProgress(1 / length(queries),
                                 detail = sprintf("Query %d of %d", index, length(queries)))
           }
         })
         failed <- sum(purrr::map_lgl(collected, "failed"))
-        message <- sprintf("Finished: %d unique papers; %d failed or partial queries. Saved to %s",
+        message <- sprintf("Finished: %d papers; %d failed or partial queries. Saved to %s",
                            nrow(results()$unique_papers_output), failed, output_dir)
         serp_log(message, log_file, append_log)
         update_status(message)

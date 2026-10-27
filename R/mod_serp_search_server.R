@@ -107,18 +107,43 @@ mod_serp_search_server <- function(id) {
         shiny::withProgress(message = "Searching literature", value = 0, {
           for (index in seq_along(queries)) {
             update_status(sprintf("Searching query %d of %d.", index, length(queries)))
-            collected[[index]] <- process_single_search_term(
-              query = queries[index], api_key = api_key,
-              paper_limit = input$paper_limit,
-              use_dynamic_papers_limit = isTRUE(input$use_dynamic_papers_limit),
-              dynamic_fraction = input$dynamic_fraction,
-              dynamic_min = input$dynamic_min, dynamic_max = input$dynamic_max,
-              use_full_abstract_lookup = isTRUE(input$use_full_abstract_lookup),
-              s2_api_key = Sys.getenv("SEMANTIC_SCHOLAR_API_KEY", ""),
-              log_file = log_file, log_callback = append_log,
-              year_low = if (isTRUE(input$filter_by_year)) input$year_low else NULL,
-              year_high = if (isTRUE(input$filter_by_year)) input$year_high else NULL
-            )
+            
+            # Wrapper function to allow automated retry on rate limit failures
+            execute_query_with_retry <- function(query, is_retry = FALSE) {
+              if (is_retry) {
+                # If we are retrying, wait 60 seconds to let the rate limit reset
+                shiny::showNotification(
+                  "Rate limit encountered. Pausing for 60 seconds before retrying the failed search. This will make the process take a bit longer.",
+                  type = "warning", duration = 60, id = "rate_limit_warning"
+                )
+                serp_log("Rate limit hit. Pausing 60 seconds before retry...", log_file, append_log)
+                Sys.sleep(60)
+                serp_log("Resuming search...", log_file, append_log)
+              }
+              
+              process_single_search_term(
+                query = query, api_key = api_key,
+                paper_limit = input$paper_limit,
+                use_dynamic_papers_limit = isTRUE(input$use_dynamic_papers_limit),
+                dynamic_fraction = input$dynamic_fraction,
+                dynamic_min = input$dynamic_min, dynamic_max = input$dynamic_max,
+                use_full_abstract_lookup = isTRUE(input$use_full_abstract_lookup),
+                s2_api_key = Sys.getenv("SEMANTIC_SCHOLAR_API_KEY", ""),
+                log_file = log_file, log_callback = append_log,
+                year_low = if (isTRUE(input$filter_by_year)) input$year_low else NULL,
+                year_high = if (isTRUE(input$filter_by_year)) input$year_high else NULL
+              )
+            }
+
+            # First attempt
+            query_result <- execute_query_with_retry(queries[index])
+            
+            # If it failed but it wasn't an out_of_credits error, try exactly ONE long-pause retry
+            if (isTRUE(query_result$failed) && !isTRUE(query_result$out_of_credits)) {
+               query_result <- execute_query_with_retry(queries[index], is_retry = TRUE)
+            }
+            
+            collected[[index]] <- query_result
             
             if (isTRUE(collected[[index]]$out_of_credits)) {
               shiny::showModal(shiny::modalDialog(

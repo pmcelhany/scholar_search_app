@@ -313,7 +313,8 @@ process_single_search_term <- function(
   list(
     full_data = full_data, display_data = serp_display_papers(full_data),
     summary = dplyr::tibble(search_query = query, total_matches = total_matches,
-                           retrieved = nrow(full_data), failed = failed),
+                           retrieved = nrow(full_data), 
+                           search_status = if (failed) "failed (see log)" else "successful"),
     failed = failed,
     out_of_credits = FALSE
   )
@@ -355,7 +356,7 @@ save_search_outputs <- function(results_list, output_dir, session_timestamp,
   display_data <- serp_display_papers(full_data)
   summaries <- dplyr::bind_rows(c(
     list(dplyr::tibble(search_query = character(), total_matches = double(),
-                       retrieved = integer(), failed = logical())),
+                       retrieved = integer(), search_status = character())),
     purrr::map(purrr::keep(results_list, ~!isTRUE(.x$out_of_credits)), "summary")
   ))
   deduplicate <- function(data, year_column) {

@@ -322,15 +322,15 @@ process_single_search_term <- function(
   })
   full_data <- dplyr::bind_rows(c(list(serp_empty_papers()), parsed))
   
-  # Calculate the fraction of retrieved papers that have an abstract
+  # Calculate the percentage of retrieved papers that have an abstract
   abstract_count <- sum(!is.na(full_data$abstract) & nzchar(trimws(full_data$abstract)))
-  fraction_with_abstract <- if (nrow(full_data) > 0) abstract_count / nrow(full_data) else 0
+  percent_with_abstract <- if (nrow(full_data) > 0) (abstract_count / nrow(full_data)) * 100 else 0
   
   list(
     full_data = full_data, display_data = serp_display_papers(full_data),
     summary = dplyr::tibble(search_query = query, total_matches = total_matches,
                            retrieved = nrow(full_data), 
-                           fraction_with_abstract = round(fraction_with_abstract, 2),
+                           percent_with_abstract = paste0(round(percent_with_abstract, 1), "%"),
                            search_status = if (failed) "failed (see log)" else "successful"),
     failed = failed,
     out_of_credits = FALSE
@@ -373,7 +373,7 @@ save_search_outputs <- function(results_list, output_dir, session_timestamp,
   display_data <- serp_display_papers(full_data)
   summaries <- dplyr::bind_rows(c(
     list(dplyr::tibble(search_query = character(), total_matches = double(),
-                       retrieved = integer(), fraction_with_abstract = double(), 
+                       retrieved = integer(), percent_with_abstract = character(), 
                        search_status = character())),
     purrr::map(purrr::keep(results_list, ~!isTRUE(.x$out_of_credits)), "summary")
   ))

@@ -199,7 +199,7 @@ serp_empty_papers <- function() {
   dplyr::tibble(
     title = character(), authors = list(), year = integer(),
     publicationTypes = list(), journal = list(), externalIds = list(),
-    abstract = character(), venue = character(), search_query = character(),
+    abstract = character(), full_abstract_retrieved = logical(), venue = character(), search_query = character(),
     search_rank = integer()
   )
 }
@@ -316,14 +316,16 @@ process_single_search_term <- function(
       year = as.integer(stringr::str_extract(summary, "\\b(19|20)\\d{2}\\b")),
       publicationTypes = list("Journal Article"),
       journal = list(list(name = journal_name)), externalIds = list(list(DOI = doi)),
-      abstract = serp_text(metadata$abstract, serp_text(hit$snippet)), venue = journal_name,
+      abstract = serp_text(metadata$abstract, serp_text(hit$snippet)), 
+      full_abstract_retrieved = !is.null(metadata) && !is.na(serp_text(metadata$abstract)) && nzchar(serp_text(metadata$abstract)),
+      venue = journal_name,
       search_query = query, search_rank = as.integer(index)
     )
   })
   full_data <- dplyr::bind_rows(c(list(serp_empty_papers()), parsed))
   
-  # Calculate the percentage of retrieved papers that have an abstract
-  abstract_count <- sum(!is.na(full_data$abstract) & nzchar(trimws(full_data$abstract)))
+  # Calculate the percentage of retrieved papers that have a full abstract (not just a snippet)
+  abstract_count <- sum(isTRUE(full_data$full_abstract_retrieved) | full_data$full_abstract_retrieved == TRUE, na.rm = TRUE)
   percent_with_abstract <- if (nrow(full_data) > 0) (abstract_count / nrow(full_data)) * 100 else 0
   
   list(

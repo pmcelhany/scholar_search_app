@@ -224,7 +224,7 @@ process_single_search_term <- function(
     query, api_key, paper_limit = 100, use_dynamic_papers_limit = FALSE,
     dynamic_fraction = 0.1, dynamic_min = 20, dynamic_max = 200,
     use_full_abstract_lookup = TRUE, s2_api_key = "",
-    log_file = NULL, log_callback = NULL, year_low = NULL, year_high = NULL) {
+    log_file = NULL, log_callback = NULL, year_low = NULL, year_high = NULL, progress_callback = NULL) {
   serp_log(paste("Searching for:", query), log_file, log_callback)
   limit <- paper_limit
   hits <- list()
@@ -232,6 +232,9 @@ process_single_search_term <- function(
   start_idx <- 0L
   failed <- FALSE
   while (length(hits) < limit) {
+    if (!is.null(progress_callback)) {
+      progress_callback(sprintf("Paginating SerpApi: fetched %d / %d requested papers...", length(hits), limit))
+    }
     result <- robust_serp_search(
       query, api_key, start_idx = start_idx, num = 20,
       log_file = log_file, log_callback = log_callback,
@@ -275,7 +278,15 @@ process_single_search_term <- function(
     if (length(parts) == 1L) return(name)
     paste0(utils::tail(parts, 1), ", ", paste(utils::head(parts, -1), collapse = " "))
   }
+  
+  if (!is.null(progress_callback)) {
+    progress_callback(sprintf("Found %d papers. Looking up abstracts and DOIs...", length(hits)))
+  }
+  
   parsed <- purrr::imap(hits, function(hit, index) {
+    if (!is.null(progress_callback)) {
+      progress_callback(sprintf("Enriching metadata for paper %d of %d...", index, length(hits)))
+    }
     if (!is.list(hit)) return(NULL)
     title <- serp_text(hit$title)
     summary <- serp_text(hit$publication_info$summary)

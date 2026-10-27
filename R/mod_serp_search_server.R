@@ -119,6 +119,19 @@ mod_serp_search_server <- function(id) {
               year_low = if (isTRUE(input$filter_by_year)) input$year_low else NULL,
               year_high = if (isTRUE(input$filter_by_year)) input$year_high else NULL
             )
+            
+            if (isTRUE(collected[[index]]$out_of_credits)) {
+              shiny::showModal(shiny::modalDialog(
+                title = "SerpApi Credits Depleted",
+                "Your SerpApi account has run out of searches. The search has been aborted to prevent further errors. Please visit serpapi.com to upgrade your plan or purchase more credits.",
+                easyClose = TRUE,
+                footer = shiny::modalButton("Dismiss")
+              ))
+              # Remove the empty failed placeholder so it doesn't crash the save function
+              collected[[index]] <- NULL
+              break
+            }
+            
             # Persist completed queries so later failures do not discard results.
             results(save_search_outputs(collected, output_dir, timestamp, 
                                         do_deduplicate = isTRUE(input$deduplicate),

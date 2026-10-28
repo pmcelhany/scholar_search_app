@@ -7,6 +7,9 @@ options("golem.app.prod" = FALSE)
 # Register the resource path globally before the UI renders
 shiny::addResourcePath("docs", normalizePath("inst/app/www", mustWork = FALSE))
 
+# Register the resource path globally before the UI renders
+shiny::addResourcePath("docs", normalizePath("inst/app/www", mustWork = FALSE))
+
 # Standard golem launch (R/run_app.R returns the shiny.appobj)
 #run_app()
 

@@ -118,7 +118,6 @@ mod_serp_search_server <- function(id) {
                 dynamic_fraction = input$dynamic_fraction,
                 dynamic_min = input$dynamic_min, dynamic_max = input$dynamic_max,
                 use_full_abstract_lookup = isTRUE(input$use_full_abstract_lookup),
-                s2_api_key = Sys.getenv("SEMANTIC_SCHOLAR_API_KEY", ""),
                 log_file = log_file, log_callback = append_log,
                 year_low = if (isTRUE(input$filter_by_year)) input$year_low else NULL,
                 year_high = if (isTRUE(input$filter_by_year)) input$year_high else NULL,

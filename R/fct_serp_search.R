@@ -117,72 +117,100 @@ serp_text <- function(value, default = NA_character_) {
   as.character(value[[1L]])
 }
 
-lookup_s2_metadata <- function(title, api_key = "", log_file = NULL,
-                               log_callback = NULL) {
-  if (is.na(serp_text(title)) || !nzchar(title)) return(NULL)
-  clean_title <- stringr::str_trim(stringr::str_remove_all(title, "\\[.*?\\]"))
-  normalize <- function(x) {
-    stringr::str_to_lower(stringr::str_replace_all(x, "[^[:alnum:]]", ""))
+reconstruct_openalex_abstract <- function(inverted_index) {
+  if (is.null(inverted_index) || length(inverted_index) == 0) return(NA_character_)
+  words <- names(inverted_index)
+  max_pos <- max(unlist(inverted_index))
+  word_vector <- character(max_pos + 1)
+  for (w in words) {
+    pos <- unlist(inverted_index[[w]])
+    word_vector[pos + 1] <- w
   }
-  norm_target <- normalize(clean_title)
-  if (!nzchar(norm_target)) return(NULL)
-  headers <- if (nzchar(api_key)) c(`x-api-key` = api_key) else character()
-  execute_query <- function(text, quoted = FALSE) {
-    for (attempt in 0:2) {
-      Sys.sleep(1 + stats::runif(1, 0, 1))
-      response <- tryCatch(
-        httr::GET(
-          "https://api.semanticscholar.org/graph/v1/paper/search",
-          query = list(query = text, limit = if (quoted) 1 else 3,
-                       fields = "abstract,title,journal,venue,externalIds"),
-          httr::add_headers(.headers = headers), httr::timeout(10)
-        ),
-        error = function(e) NULL
-      )
-      if (is.null(response)) return(NULL)
-      if (httr::status_code(response) == 200L) {
-        body <- tryCatch(
-          jsonlite::fromJSON(httr::content(response, as = "text", encoding = "UTF-8"),
-                             simplifyVector = FALSE),
-          error = function(e) NULL
-        )
-        for (candidate in body$data) {
-          norm_candidate <- normalize(serp_text(candidate$title, ""))
-          if (nzchar(norm_candidate) &&
-              (norm_target == norm_candidate ||
-               grepl(norm_target, norm_candidate, fixed = TRUE) ||
-               grepl(norm_candidate, norm_target, fixed = TRUE))) {
-            journal <- if (is.list(candidate$journal)) {
-              serp_text(candidate$journal$name, serp_text(candidate$venue))
-            } else {
-              serp_text(candidate$venue)
-            }
-            return(list(abstract = serp_text(candidate$abstract),
-                        journal = journal,
-                        doi = serp_text(candidate$externalIds$DOI)))
-          }
-        }
-        return(NULL)
-      }
-      if (httr::status_code(response) != 429L) return(NULL)
-      if (attempt < 2L) Sys.sleep(5 * (attempt + 1L))
-    }
-    NULL
-  }
-  serp_log(sprintf("  Attempting exact metadata match for: %s", clean_title),
-           log_file, log_callback)
-  result <- execute_query(paste0('"', clean_title, '"'), TRUE)
-  if (is.list(result)) return(result)
-  serp_log("  Exact match failed; attempting validated unquoted match.",
-           log_file, log_callback)
-  execute_query(clean_title)
+  paste(word_vector, collapse = " ")
 }
 
-lookup_crossref_journal <- function(doi, log_file = NULL) {
+lookup_openalex_metadata <- function(title, doi = NA_character_, link = NA_character_, log_file = NULL, log_callback = NULL) {
+  # 1. Attempt exact lookup by DOI first
+  extracted_doi <- doi
+  if (is.na(extracted_doi) && !is.na(link) && nzchar(link)) {
+    m <- regexpr("10\\.\\d{4,9}/[-._;()/:A-Z0-9]+", link, ignore.case = TRUE)
+    if (m > 0) extracted_doi <- regmatches(link, m)
+  }
+  
+  if (!is.na(extracted_doi) && nzchar(extracted_doi)) {
+    # OpenAlex expects doi: prefix in the path, but requires standardizing
+    clean_doi <- stringr::str_remove(extracted_doi, "^https?://(dx\\.)?doi\\.org/")
+    
+    response <- tryCatch(
+      httr::GET(
+        paste0("https://api.openalex.org/works/doi:", clean_doi),
+        httr::add_headers(`User-Agent` = "mailto:scholarsearchapp@example.com"),
+        httr::timeout(10)
+      ),
+      error = function(e) NULL
+    )
+    
+    if (!is.null(response) && httr::status_code(response) == 200L) {
+      body <- tryCatch(jsonlite::fromJSON(httr::content(response, as = "text", encoding = "UTF-8"), simplifyVector = FALSE), error = function(e) NULL)
+      if (is.list(body)) {
+        journal <- if (!is.null(body$primary_location) && !is.null(body$primary_location$source)) {
+          body$primary_location$source$display_name
+        } else NA_character_
+        return(list(
+          abstract = reconstruct_openalex_abstract(body$abstract_inverted_index),
+          journal = serp_text(journal),
+          doi = extracted_doi
+        ))
+      }
+    }
+  }
+  
+  # 2. Fall back to title search
+  if (is.na(serp_text(title)) || !nzchar(title)) return(NULL)
+  clean_title <- stringr::str_trim(stringr::str_remove_all(title, "\\[.*?\\]"))
+  if (!nzchar(clean_title)) return(NULL)
+  
+  response <- tryCatch(
+    httr::GET(
+      "https://api.openalex.org/works",
+      query = list(
+        `filter` = paste0("title.search:", clean_title),
+        select = "abstract_inverted_index,title,doi,primary_location",
+        per_page = 1
+      ),
+      httr::add_headers(`User-Agent` = "mailto:scholarsearchapp@example.com"),
+      httr::timeout(10)
+    ),
+    error = function(e) NULL
+  )
+  
+  if (!is.null(response) && httr::status_code(response) == 200L) {
+    body <- tryCatch(jsonlite::fromJSON(httr::content(response, as = "text", encoding = "UTF-8"), simplifyVector = FALSE), error = function(e) NULL)
+    if (is.list(body) && length(body$results) > 0) {
+      hit <- body$results[[1]]
+      journal <- if (!is.null(hit$primary_location) && !is.null(hit$primary_location$source)) {
+        hit$primary_location$source$display_name
+      } else NA_character_
+      found_doi <- if (!is.null(hit$doi)) stringr::str_remove(hit$doi, "^https?://doi\\.org/") else NA_character_
+      return(list(
+        abstract = reconstruct_openalex_abstract(hit$abstract_inverted_index),
+        journal = serp_text(journal),
+        doi = found_doi
+      ))
+    }
+  }
+  
+  NULL
+}
+
+lookup_crossref_metadata <- function(doi, log_file = NULL) {
   if (is.na(serp_text(doi)) || !nzchar(doi)) return(NULL)
   response <- tryCatch(
-    httr::GET(paste0("https://api.crossref.org/works/",
-                     utils::URLencode(doi, reserved = TRUE)), httr::timeout(10)),
+    httr::GET(
+      paste0("https://api.crossref.org/works/", utils::URLencode(doi, reserved = TRUE)),
+      httr::add_headers(`User-Agent` = "ScholarSearchApp/1.0 (mailto:admin@example.com)"),
+      httr::timeout(10)
+    ),
     error = function(e) NULL
   )
   if (is.null(response) || httr::status_code(response) != 200L) return(NULL)
@@ -191,8 +219,18 @@ lookup_crossref_journal <- function(doi, log_file = NULL) {
                        simplifyVector = FALSE),
     error = function(e) NULL
   )
+  
   journal <- serp_text(body$message$`container-title`)
-  if (is.na(journal) || !nzchar(journal)) NULL else journal
+  if (!is.na(journal) && !nzchar(journal)) journal <- NA_character_
+  
+  abstract <- serp_text(body$message$abstract)
+  if (!is.na(abstract)) {
+    abstract <- stringr::str_remove_all(abstract, "<jats:title>.*?</jats:title>|<title>.*?</title>")
+    abstract <- stringr::str_remove_all(abstract, "<[^>]+>")
+    abstract <- stringr::str_trim(stringr::str_replace_all(abstract, "\\s+", " "))
+  }
+  
+  list(journal = journal, abstract = abstract)
 }
 
 serp_empty_papers <- function() {
@@ -223,7 +261,7 @@ serp_display_papers <- function(papers) {
 process_single_search_term <- function(
     query, api_key, paper_limit = 100, use_dynamic_papers_limit = FALSE,
     dynamic_fraction = 0.1, dynamic_min = 20, dynamic_max = 200,
-    use_full_abstract_lookup = TRUE, s2_api_key = "",
+    use_full_abstract_lookup = TRUE,
     log_file = NULL, log_callback = NULL, year_low = NULL, year_high = NULL, progress_callback = NULL) {
   serp_log(paste("Searching for:", query), log_file, log_callback)
   limit <- paper_limit
@@ -301,23 +339,38 @@ process_single_search_term <- function(
       trimws(stringr::str_remove(parts[2L], ",?\\s*\\b\\d{4}\\b"))
     } else NA_character_
     if (!is.na(journal) && !nzchar(journal)) journal <- NA_character_
+    link <- serp_text(hit$link)
+    
     metadata <- if (use_full_abstract_lookup) {
-      lookup_s2_metadata(title, api_key = s2_api_key,
-                         log_file = log_file, log_callback = log_callback)
+      lookup_openalex_metadata(title = title, link = link, 
+                               log_file = log_file, log_callback = log_callback)
     } else NULL
     doi <- serp_text(metadata$doi)
-    if (is.na(journal) || stringr::str_detect(journal, "\\.\\.\\.|…")) {
-      crossref <- if (!is.na(doi)) lookup_crossref_journal(doi, log_file) else NULL
-      journal <- serp_text(crossref, serp_text(metadata$journal, journal))
+    if (is.na(doi) && !is.na(link) && nzchar(link)) {
+      m <- regexpr("10\\.\\d{4,9}/[-._;()/:A-Z0-9]+", link, ignore.case = TRUE)
+      if (m > 0) doi <- regmatches(link, m)
     }
+    
+    crossref <- if (!is.na(doi) && use_full_abstract_lookup) lookup_crossref_metadata(doi, log_file) else NULL
+    
+    if (is.na(journal) || stringr::str_detect(journal, "\\.\\.\\.|…")) {
+      journal <- serp_text(crossref$journal, serp_text(metadata$journal, journal))
+    }
+    
+    final_abstract <- serp_text(metadata$abstract)
+    if (is.na(final_abstract) || !nzchar(final_abstract)) {
+      final_abstract <- serp_text(crossref$abstract, serp_text(hit$snippet))
+    }
+    
     journal_name <- stringr::str_trim(stringr::str_remove_all(journal, "\\.\\.\\.|…"))
     dplyr::tibble(
       title = title, authors = list(authors),
       year = as.integer(stringr::str_extract(summary, "\\b(19|20)\\d{2}\\b")),
       publicationTypes = list("Journal Article"),
       journal = list(list(name = journal_name)), externalIds = list(list(DOI = doi)),
-      abstract = serp_text(metadata$abstract, serp_text(hit$snippet)), 
-      full_abstract_retrieved = !is.null(metadata) && !is.na(serp_text(metadata$abstract)) && nzchar(serp_text(metadata$abstract)),
+      abstract = final_abstract, 
+      full_abstract_retrieved = (!is.na(serp_text(metadata$abstract)) && nzchar(serp_text(metadata$abstract))) || 
+                                (!is.na(serp_text(crossref$abstract)) && nzchar(serp_text(crossref$abstract))),
       venue = journal_name,
       search_query = query, search_rank = as.integer(index)
     )

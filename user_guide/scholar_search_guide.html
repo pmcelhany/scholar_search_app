@@ -159,7 +159,7 @@ ul.task-list li input[type="checkbox"] {
 </ul></li>
 <li><strong>Metadata &amp; Processing Options:</strong>
 <ul>
-<li><strong>Lookup Full Abstract:</strong> (Recommended) Keep this checked to allow the app to cross-reference hits against Semantic Scholar and CrossRef to fill in missing abstracts and DOIs. <em>Note: This metadata lookup process can be slow (sometimes adding several seconds per paper) due to API rate limiting and backoff protocols. If speed is your priority and you only need basic titles/authors, you can uncheck this.</em></li>
+<li><strong>Lookup Full Abstract:</strong> (Recommended) Keep this checked to allow the app to cross-reference hits against OpenAlex and CrossRef to fill in missing abstracts and DOIs. <em>Note: This metadata lookup process can be slow (sometimes adding several seconds per paper) due to API rate limiting and backoff protocols. If speed is your priority and you only need basic titles/authors, you can uncheck this.</em></li>
 <li><strong>Deduplicate Results:</strong> When checked, if multiple queries return the exact same paper (matched by Title and Year), the app will collapse them into a single row in the final output to save you time during literature screening.</li>
 </ul></li>
 <li><strong>Output Settings:</strong>
@@ -184,7 +184,7 @@ ul.task-list li input[type="checkbox"] {
 </section>
 <section id="search-summary-search_summary_.csv" class="level3">
 <h3 class="anchored" data-anchor-id="search-summary-search_summary_.csv">3. Search Summary (<code>search_summary_*.csv</code>)</h3>
-<p>A high-level diagnostic log showing how many queries succeeded. The columns in this table are: * <strong><code>search_query</code></strong>: The exact boolean string sent to the API. * <strong><code>total_matches</code></strong>: The estimated total number of indexable papers Google Scholar claims match the query. <em>(Note: This is often a highly optimistic estimate and rarely represents the true number of viewable pages).</em> * <strong><code>retrieved</code></strong>: The actual number of papers the app successfully scraped and downloaded. * <strong><code>percent_with_abstract</code></strong>: The percentage (e.g., <code>85.0%</code>) of the retrieved papers where the app successfully found and downloaded the <em>full</em> abstract from Semantic Scholar. Papers that only have the default one-line snippet from Google Scholar are not counted in this percentage, even though the snippet is saved in the CSV. * <strong><code>search_status</code></strong>: Indicates if the query was <code>successful</code> or if it <code>failed (see log)</code> due to an API error, rate limit, or timeout.</p>
+<p>A high-level diagnostic log showing how many queries succeeded. The columns in this table are: * <strong><code>search_query</code></strong>: The exact boolean string sent to the API. * <strong><code>total_matches</code></strong>: The estimated total number of indexable papers Google Scholar claims match the query. <em>(Note: This is often a highly optimistic estimate and rarely represents the true number of viewable pages).</em> * <strong><code>retrieved</code></strong>: The actual number of papers the app successfully scraped and downloaded. * <strong><code>percent_with_abstract</code></strong>: The percentage (e.g., <code>85.0%</code>) of the retrieved papers where the app successfully found and downloaded the <em>full</em> abstract from OpenAlex or CrossRef. Papers that only have the default one-line snippet from Google Scholar are not counted in this percentage, even though the snippet is saved in the CSV. * <strong><code>search_status</code></strong>: Indicates if the query was <code>successful</code> or if it <code>failed (see log)</code> due to an API error, rate limit, or timeout.</p>
 </section>
 <section id="search-log-search_log_.txt" class="level3">
 <h3 class="anchored" data-anchor-id="search-log-search_log_.txt">4. Search Log (<code>search_log_*.txt</code>)</h3>
@@ -219,7 +219,7 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>SerpApi Credits Depleted Pop-up:</strong> If the app suddenly aborts and shows a pop-up warning that your account has run out of searches, it means you have exhausted your SerpApi monthly quota. You must visit <a href="https://serpapi.com">SerpApi.com</a> to purchase extra credits or upgrade to a higher-tier plan before you can run any more queries.</li>
 <li><strong>Zero Results or “SerpApi connection failed”:</strong> Double-check that your SerpApi key is valid.</li>
 <li><strong>Fewer Results Than Expected:</strong> See the <em>API vs.&nbsp;Web Browser Discrepancies</em> section above.</li>
-<li><strong>App Hangs/Pauses:</strong> The app has built-in rate-limiting and backoffs to prevent you from being banned by SerpApi or Semantic Scholar. Let it run; it will often pause for several seconds between requests intentionally, especially when looking up metadata.</li>
+<li><strong>App Hangs/Pauses:</strong> The app has built-in rate-limiting and backoffs to prevent you from being banned by SerpApi or OpenAlex. Let it run; it will often pause for several seconds between requests intentionally, especially when looking up metadata.</li>
 </ul>
 </section>
 </section>

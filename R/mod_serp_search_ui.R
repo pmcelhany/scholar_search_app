@@ -39,7 +39,7 @@ mod_serp_search_ui <- function(id) {
                               value = 200, min = 10)
         ),
         shiny::checkboxInput(ns("use_full_abstract_lookup"),
-                             "Lookup Full Abstract (Semantic Scholar / CrossRef)",
+                             "Lookup Full Abstract (OpenAlex / CrossRef)",
                              value = TRUE),
         shiny::checkboxInput(ns("deduplicate"),
                              "Deduplicate Results",

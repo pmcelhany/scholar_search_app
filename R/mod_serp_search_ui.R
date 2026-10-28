@@ -15,7 +15,7 @@ mod_serp_search_ui <- function(id) {
         shiny::passwordInput(ns("serpapi_key"), "SerpApi Key", value = ""),
         shiny::helpText("Leave the key blank to use SERPAPI_API_KEY on the server."),
         shiny::textInput(ns("queries_pat"),
-                         "Filter Queries by Regex/Pattern (queries_pat)", value = ""),
+                         "Filter Queries by Regex/Pattern (Optional)", value = ""),
         shiny::numericInput(ns("paper_limit"), "Fixed Paper Limit", value = 100, min = 1),
         shiny::h4("Search Filters"),
         shiny::checkboxInput(ns("filter_by_year"), "Filter by Year Range", value = FALSE),

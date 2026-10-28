@@ -10,9 +10,9 @@ id = "c2fe2a30-42a3-4b9d-8214-3a27471f2c6d"
 dashboard_url = "https://connect.fisheries.noaa.gov/connect/#/apps/c2fe2a30-42a3-4b9d-8214-3a27471f2c6d"
 direct_url = "https://connect.fisheries.noaa.gov/content/c2fe2a30-42a3-4b9d-8214-3a27471f2c6d/"
 logs_url = "https://connect.fisheries.noaa.gov/connect/#/apps/c2fe2a30-42a3-4b9d-8214-3a27471f2c6d/logs"
-deployed_at = "2026-10-28T00:33:25.306Z"
-bundle_id = "7664"
-bundle_url = "https://connect.fisheries.noaa.gov/__api__/v1/content/c2fe2a30-42a3-4b9d-8214-3a27471f2c6d/bundles/7664/download"
+deployed_at = "2026-10-28T00:58:31.740Z"
+bundle_id = "7666"
+bundle_url = "https://connect.fisheries.noaa.gov/__api__/v1/content/c2fe2a30-42a3-4b9d-8214-3a27471f2c6d/bundles/7666/download"
 files = [
     ".posit/publish/Scholar Search-2E2H.toml",
     ".posit/publish/deployments/deployment-84D0.toml",
@@ -24,7 +24,6 @@ files = [
     "app.R",
     "inst/app/www/scholar_search_guide.html",
 ]
-dismissed_at = "2026-10-28T00:33:25.306Z"
 
 [configuration]
 "$schema" = "https://cdn.posit.co/publisher/schemas/posit-publishing-schema-v3.json"

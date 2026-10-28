@@ -54,3 +54,6 @@ rsconnect/
 
 # output folder
 output/
+
+# key
+.key

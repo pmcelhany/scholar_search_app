@@ -1,3 +1,52 @@
+lookup_pubmed_metadata <- function(doi, log_file = NULL) {
+  if (is.na(serp_text(doi)) || !nzchar(doi)) return(NULL)
+  
+  # Step 1: ESearch to convert DOI to PMID
+  search_url <- "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
+  res <- tryCatch(
+    httr::GET(search_url, query = list(
+      db = "pubmed", term = paste0(doi, "[doi]"), retmode = "json",
+      email = "scholarsearchapp@example.com", tool = "scholarsearchapp"
+    ), httr::timeout(10)),
+    error = function(e) NULL
+  )
+  
+  if (is.null(res) || httr::status_code(res) != 200L) return(NULL)
+  
+  body <- tryCatch(jsonlite::fromJSON(httr::content(res, as = "text", encoding = "UTF-8"), simplifyVector = FALSE), error = function(e) NULL)
+  if (is.null(body) || is.null(body$esearchresult) || length(body$esearchresult$idlist) == 0) return(NULL)
+  
+  pmid <- body$esearchresult$idlist[[1]]
+  
+  # Step 2: EFetch to get the XML metadata
+  fetch_url <- "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
+  Sys.sleep(0.4) # PubMed allows 3 requests per second without an API key
+  fetch_res <- tryCatch(
+    httr::GET(fetch_url, query = list(
+      db = "pubmed", id = pmid, retmode = "xml",
+      email = "scholarsearchapp@example.com", tool = "scholarsearchapp"
+    ), httr::timeout(10)),
+    error = function(e) NULL
+  )
+  
+  if (is.null(fetch_res) || httr::status_code(fetch_res) != 200L) return(NULL)
+  
+  xml_doc <- tryCatch(xml2::read_xml(httr::content(fetch_res, as = "raw")), error = function(e) NULL)
+  if (is.null(xml_doc)) return(NULL)
+  
+  abstract_nodes <- xml2::xml_find_all(xml_doc, "//AbstractText")
+  abstract <- if (length(abstract_nodes) > 0) {
+    text <- paste(xml2::xml_text(abstract_nodes), collapse = " ")
+    stringr::str_trim(stringr::str_replace_all(text, "\\s+", " "))
+  } else NA_character_
+  
+  journal_node <- xml2::xml_find_first(xml_doc, "//Title")
+  journal <- if (length(journal_node) > 0) xml2::xml_text(journal_node) else NA_character_
+  
+  if (is.na(abstract) || !nzchar(abstract)) return(NULL)
+  
+  list(journal = journal, abstract = abstract)
+}
 serp_log <- function(message, log_file = NULL, log_callback = NULL) {
   line <- sprintf("[%s UTC] %s",
                   format(Sys.time(), "%Y-%m-%d %H:%M:%S", tz = "UTC"), message)
@@ -351,15 +400,16 @@ process_single_search_term <- function(
       if (m > 0) doi <- regmatches(link, m)
     }
     
-    crossref <- if (!is.na(doi) && use_full_abstract_lookup) lookup_crossref_metadata(doi, log_file) else NULL
+    pubmed <- if (!is.na(doi) && use_full_abstract_lookup) lookup_pubmed_metadata(doi, log_file) else NULL
+    crossref <- if (is.null(pubmed) && !is.na(doi) && use_full_abstract_lookup) lookup_crossref_metadata(doi, log_file) else NULL
     
     if (is.na(journal) || stringr::str_detect(journal, "\\.\\.\\.|…")) {
-      journal <- serp_text(crossref$journal, serp_text(metadata$journal, journal))
+      journal <- serp_text(pubmed$journal, serp_text(crossref$journal, serp_text(metadata$journal, journal)))
     }
     
     final_abstract <- serp_text(metadata$abstract)
     if (is.na(final_abstract) || !nzchar(final_abstract)) {
-      final_abstract <- serp_text(crossref$abstract, serp_text(hit$snippet))
+      final_abstract <- serp_text(pubmed$abstract, serp_text(crossref$abstract, serp_text(hit$snippet)))
     }
     
     journal_name <- stringr::str_trim(stringr::str_remove_all(journal, "\\.\\.\\.|…"))
@@ -370,6 +420,7 @@ process_single_search_term <- function(
       journal = list(list(name = journal_name)), externalIds = list(list(DOI = doi)),
       abstract = final_abstract, 
       full_abstract_retrieved = (!is.na(serp_text(metadata$abstract)) && nzchar(serp_text(metadata$abstract))) || 
+                                (!is.na(serp_text(pubmed$abstract)) && nzchar(serp_text(pubmed$abstract))) ||
                                 (!is.na(serp_text(crossref$abstract)) && nzchar(serp_text(crossref$abstract))),
       venue = journal_name,
       search_query = query, search_rank = as.integer(index)

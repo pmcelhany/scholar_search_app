@@ -55,5 +55,5 @@ rsconnect/
 # output folder
 output/
 
-# key
+# api key
 .key

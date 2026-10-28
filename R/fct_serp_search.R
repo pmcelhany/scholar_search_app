@@ -428,14 +428,17 @@ process_single_search_term <- function(
   })
   full_data <- dplyr::bind_rows(c(list(serp_empty_papers()), parsed))
   
+  # Filter to actual valid papers for math
+  actual_papers <- sum(!is.na(full_data$title) & nzchar(trimws(full_data$title)))
+  
   # Calculate the percentage of retrieved papers that have a full abstract (not just a snippet)
-  abstract_count <- sum(isTRUE(full_data$full_abstract_retrieved) | full_data$full_abstract_retrieved == TRUE, na.rm = TRUE)
-  percent_with_abstract <- if (nrow(full_data) > 0) (abstract_count / nrow(full_data)) * 100 else 0
+  abstract_count <- sum(full_data$full_abstract_retrieved, na.rm = TRUE)
+  percent_with_abstract <- if (actual_papers > 0) (abstract_count / actual_papers) * 100 else 0
   
   list(
     full_data = full_data, display_data = serp_display_papers(full_data),
     summary = dplyr::tibble(search_query = query, total_matches = total_matches,
-                           retrieved = nrow(full_data), 
+                           retrieved = actual_papers, 
                            percent_with_abstract = paste0(round(percent_with_abstract, 1), "%"),
                            search_status = if (failed) "failed (see log)" else "successful"),
     failed = failed,

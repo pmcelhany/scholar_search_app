@@ -89,10 +89,15 @@ mod_serp_search_server <- function(id) {
           stop("Check the dynamic fraction and paper limits; minimum must not exceed maximum.")
         }
         if (is.null(input$output_dir) || !nzchar(trimws(input$output_dir))) {
-          stop("Please provide an output directory.")
+          # If published on a server and the user leaves it blank, use the R tempdir
+          output_dir <- file.path(tempdir(), "scholar_search_output")
+          shiny::updateTextInput(session, "output_dir", value = output_dir)
+        } else {
+          output_dir <- path.expand(trimws(input$output_dir))
         }
+        
         queries <- parse_query_csv(input$csv_file$datapath, input$queries_pat)
-        output_dir <- path.expand(trimws(input$output_dir))
+        
         if (!dir.exists(output_dir) &&
             !dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)) {
           stop("Cannot create the output directory.")

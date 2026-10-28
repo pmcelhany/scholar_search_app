@@ -68,7 +68,8 @@ search_query
     -   **Lookup Full Abstract:** (Recommended) Keep this checked to allow the app to cross-reference hits against Semantic Scholar and CrossRef to fill in missing abstracts and DOIs. *Note: This metadata lookup process can be slow (sometimes adding several seconds per paper) due to API rate limiting and backoff protocols. If speed is your priority and you only need basic titles/authors, you can uncheck this.*
     -   **Deduplicate Results:** When checked, if multiple queries return the exact same paper (matched by Title and Year), the app will collapse them into a single row in the final output to save you time during literature screening.
 7.  **Output Settings:**
-    -   **Select Output Directory:** Click this button to open a local file browser and choose the exact folder where you want the results saved.
+    -   **Select Output Directory:** Click this button to open a local file browser and choose the exact folder where you want the results saved. *(Note: If the app is hosted on a cloud server, this will browse the server's directory structure, not your local computer).*
+    -   **Current Output Path:** You can type a path here manually. If you leave this field completely blank, the app will automatically generate a secure temporary folder on the server to store the results.
     -   **Output File Prefix (Optional):** Enter a custom prefix (e.g., `project_alpha_`) to organize your files. All 5 generated files will automatically be prepended with this text.
 
 Once configured, click **Run Search**. A progress bar will track the process query by query.

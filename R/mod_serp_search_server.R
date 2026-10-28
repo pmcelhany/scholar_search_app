@@ -103,7 +103,7 @@ mod_serp_search_server <- function(id) {
               if (is_retry) {
                 # If we are retrying, wait 60 seconds to let the rate limit reset
                 shiny::showNotification(
-                  "Rate limit encountered. Pausing for 60 seconds before retrying the failed search. This will make the process take a bit longer.",
+                  "Rate limit encountered. Pausing for 60 seconds before retrying the failed search.",
                   type = "warning", duration = 60, id = "rate_limit_warning"
                 )
                 serp_log("Rate limit hit. Pausing 60 seconds before retry...", log_file, append_log)

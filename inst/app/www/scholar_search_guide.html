@@ -164,17 +164,16 @@ ul.task-list li input[type="checkbox"] {
 </ul></li>
 <li><strong>Output Settings:</strong>
 <ul>
-<li><strong>Select Output Directory:</strong> Click this button to open a local file browser and choose the exact folder where you want the results saved. <em>(Note: If the app is hosted on a cloud server, this will browse the server’s directory structure, not your local computer).</em></li>
-<li><strong>Current Output Path:</strong> You can type a path here manually. If you leave this field completely blank, the app will automatically generate a secure temporary folder on the server to store the results.</li>
-<li><strong>Output File Prefix (Optional):</strong> Enter a custom prefix (e.g., <code>project_alpha_</code>) to organize your files. All 5 generated files will automatically be prepended with this text.</li>
+<li><strong>Base Name for Downloaded ZIP (Optional):</strong> Enter a custom name (e.g., <code>project_alpha</code>) to organize your files. When you download the results, the ZIP file and the files inside it will start with this name.</li>
 </ul></li>
 </ol>
 <p>Once configured, click <strong>Run Search</strong>. A progress bar will track the process query by query.</p>
+<p>When the search completes, a green <strong>Download Results (ZIP)</strong> button will appear. Click it to save all the output files directly to your local computer.</p>
 <hr>
 </section>
 <section id="understanding-outputs" class="level1">
 <h1>Understanding Outputs</h1>
-<p>When the search finishes, the app will generate several files in your designated output directory. Each file is stamped with a session timestamp (e.g., <code>_20261027_153000</code>).</p>
+<p>When you extract the downloaded ZIP file, it will contain several files. Each file is stamped with a session timestamp (e.g., <code>_20261027_153000</code>).</p>
 <section id="unique-papers-csv-unique_papers_.csv" class="level3">
 <h3 class="anchored" data-anchor-id="unique-papers-csv-unique_papers_.csv">1. Unique Papers CSV (<code>unique_papers_*.csv</code>)</h3>
 <p>This is the primary human-readable spreadsheet. It contains the deduplicated list of papers, formatted neatly with columns for: * First Author Last Name * Publication Year * Title * Journal Name * Full Author List * Abstract * DOI * Search Rank (Where it appeared in the Google Scholar results)</p>

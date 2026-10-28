@@ -45,14 +45,13 @@ mod_serp_search_ui <- function(id) {
                              "Deduplicate Results",
                              value = TRUE),
         shiny::h4("Output Settings"),
-        shinyFiles::shinyDirButton(ns("output_dir_btn"), "Select Output Directory", "Please select a folder"),
-        shiny::textInput(ns("output_dir"), "Current Output Path",
-                         value = "", placeholder = "Leave blank for a temporary download folder"),
-        shiny::helpText("Files are saved on the machine running this app."),
-        shiny::textInput(ns("file_prefix"), "Output File Prefix (Optional)", 
-                         value = "", placeholder = "e.g., project_alpha_"),
+        shiny::textInput(ns("file_prefix"), "Base Name for Downloaded ZIP (Optional)", 
+                         value = "", placeholder = "e.g., project_alpha"),
         shiny::actionButton(ns("run_search"), "Run Search",
-                            icon = shiny::icon("play"), class = "btn-primary")
+                            icon = shiny::icon("play"), class = "btn-primary"),
+        shiny::br(),
+        shiny::br(),
+        shiny::uiOutput(ns("download_btn_ui"))
       ),
       shiny::mainPanel(
         shiny::uiOutput(ns("status_banner")),

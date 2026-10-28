@@ -17,7 +17,8 @@ Imports:
     shinyFiles,
     stats,
     stringr,
-    utils
+    utils,
+    zip
 Suggests:
     devtools,
     roxygen2

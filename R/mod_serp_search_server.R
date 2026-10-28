@@ -3,18 +3,7 @@ mod_serp_search_server <- function(id) {
     logs <- shiny::reactiveVal(character())
     status <- shiny::reactiveVal("Upload a CSV and configure the search.")
     results <- shiny::reactiveVal(NULL)
-    
-    roots <- c(Home = fs::path_home(), WorkingDir = getwd(), Root = "/")
-    shinyFiles::shinyDirChoose(input, "output_dir_btn", roots = roots, session = session)
-    
-    shiny::observe({
-      if (!is.integer(input$output_dir_btn)) {
-        dir_path <- shinyFiles::parseDirPath(roots, input$output_dir_btn)
-        if (length(dir_path) > 0) {
-          shiny::updateTextInput(session, "output_dir", value = dir_path)
-        }
-      }
-    })
+    current_output_dir <- shiny::reactiveVal(NULL)
 
     output$status_banner <- shiny::renderUI(
       shiny::div(class = "alert alert-info", role = "status", status())
@@ -88,22 +77,18 @@ mod_serp_search_server <- function(id) {
              input$dynamic_min > input$dynamic_max)) {
           stop("Check the dynamic fraction and paper limits; minimum must not exceed maximum.")
         }
-        if (is.null(input$output_dir) || !nzchar(trimws(input$output_dir))) {
-          # If published on a server and the user leaves it blank, use the R tempdir
-          output_dir <- file.path(tempdir(), "scholar_search_output")
-          shiny::updateTextInput(session, "output_dir", value = output_dir)
-        } else {
-          output_dir <- path.expand(trimws(input$output_dir))
-        }
+        
+        timestamp <- gsub("\\.", "_", format(Sys.time(), "%Y%m%d_%H%M%OS6", tz = "UTC"))
+        output_dir <- file.path(tempdir(), paste0("scholar_search_", timestamp))
+        current_output_dir(output_dir)
         
         queries <- parse_query_csv(input$csv_file$datapath, input$queries_pat)
         
         if (!dir.exists(output_dir) &&
             !dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)) {
-          stop("Cannot create the output directory.")
+          stop("Cannot create the temporary output directory.")
         }
-        if (file.access(output_dir, 2) != 0) stop("The output directory is not writable.")
-        timestamp <- gsub("\\.", "_", format(Sys.time(), "%Y%m%d_%H%M%OS6", tz = "UTC"))
+        
         log_file <- file.path(output_dir, paste0("search_log_", timestamp, ".txt"))
         logs(character())
         results(NULL)
@@ -174,8 +159,8 @@ mod_serp_search_server <- function(id) {
           }
         })
         failed <- sum(purrr::map_lgl(collected, "failed"))
-        message <- sprintf("Finished: %d papers; %d failed or partial queries. Saved to %s",
-                           nrow(results()$unique_papers_output), failed, output_dir)
+        message <- sprintf("Finished: %d papers; %d failed or partial queries. Ready for download.",
+                           nrow(results()$unique_papers_output), failed)
         serp_log(message, log_file, append_log)
         update_status(message)
         if (failed > 0) shiny::showNotification(
@@ -192,6 +177,30 @@ mod_serp_search_server <- function(id) {
         shiny::showNotification(message, type = "error", duration = NULL)
       })
     })
+    
+    output$download_btn_ui <- shiny::renderUI({
+      shiny::req(results())
+      shiny::downloadButton(session$ns("download_results"), "Download Results (ZIP)", class = "btn-success")
+    })
+    
+    output$download_results <- shiny::downloadHandler(
+      filename = function() {
+        base_name <- trimws(input$file_prefix)
+        if (!nzchar(base_name)) base_name <- "scholar_search"
+        paste0(base_name, "_", format(Sys.time(), "%Y%m%d_%H%M%S", tz = "UTC"), ".zip")
+      },
+      content = function(file) {
+        shiny::req(current_output_dir())
+        zip_dir <- current_output_dir()
+        
+        owd <- setwd(zip_dir)
+        on.exit(setwd(owd))
+        
+        # Zip all files in the current temporary output directory
+        zip::zip(file, files = list.files(zip_dir, all.files = TRUE, no.. = TRUE))
+      }
+    )
+
     invisible(results)
   })
 }

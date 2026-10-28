@@ -47,7 +47,7 @@ mod_serp_search_ui <- function(id) {
         shiny::h4("Output Settings"),
         shinyFiles::shinyDirButton(ns("output_dir_btn"), "Select Output Directory", "Please select a folder"),
         shiny::textInput(ns("output_dir"), "Current Output Path",
-                         value = "output/lit_search"),
+                         value = "", placeholder = "Leave blank for a temporary download folder"),
         shiny::helpText("Files are saved on the machine running this app."),
         shiny::textInput(ns("file_prefix"), "Output File Prefix (Optional)", 
                          value = "", placeholder = "e.g., project_alpha_"),

@@ -1,17 +1,18 @@
 # Launch the ShinyApp
-pkgload::load_all(export_all = FALSE, helpers = FALSE, attach_testthat = FALSE)
+# When deploying to a server (like Posit Connect), the entire project is usually loaded 
+# as an installed package or sourced directly, rather than using pkgload.
+if (requireNamespace("pkgload", quietly = TRUE) && file.exists("DESCRIPTION")) {
+  pkgload::load_all(export_all = FALSE, helpers = FALSE, attach_testthat = FALSE)
+} else {
+  # Fallback for server deployments where pkgload fails
+  invisible(lapply(list.files("R", pattern = "\\.R$", full.names = TRUE), source))
+}
 
 # Set to FALSE for development/debugging, TRUE for production behavior
-options("golem.app.prod" = FALSE)
+options("golem.app.prod" = TRUE)
 
 # Register the resource path globally before the UI renders
 shiny::addResourcePath("docs", normalizePath("inst/app/www", mustWork = FALSE))
 
-# Register the resource path globally before the UI renders
-shiny::addResourcePath("docs", normalizePath("inst/app/www", mustWork = FALSE))
-
-# Standard golem launch (R/run_app.R returns the shiny.appobj)
-#run_app()
-
-# Alternatively, if you do not have R/run_app.R, launch directly:
+# Launch directly
 shiny::shinyApp(ui = app_ui, server = app_server)

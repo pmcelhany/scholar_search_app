@@ -20,9 +20,24 @@ mod_serp_search_server <- function(id) {
     
     output$results_table <- DT::renderDT({
       shiny::req(results())
+      
+      # Truncate abstracts to a reasonable length for the UI so they don't crash the browser
+      display_df <- results()$unique_papers_output
+      if ("abstract" %in% names(display_df)) {
+        display_df$abstract <- ifelse(
+          !is.na(display_df$abstract) & nchar(display_df$abstract) > 500,
+          paste0(substr(display_df$abstract, 1, 500), "... [Truncated for display, see CSV for full text]"),
+          display_df$abstract
+        )
+      }
+      
       DT::datatable(
-        results()$unique_papers_output,
-        options = list(pageLength = 10, scrollX = TRUE),
+        display_df,
+        options = list(
+          pageLength = 10, 
+          scrollX = TRUE,
+          autoWidth = TRUE
+        ),
         rownames = FALSE,
         filter = 'top'
       )

@@ -56,11 +56,13 @@ serp_log <- function(message, log_file = NULL, log_callback = NULL) {
 }
 
 parse_query_csv <- function(file_path, pattern = NULL) {
-  rows <- utils::read.csv(
+  # Suppress the "incomplete final line" warning that happens if a user uploads
+  # a CSV file that doesn't end with an empty newline character.
+  rows <- suppressWarnings(utils::read.csv(
     file_path, header = FALSE, colClasses = "character",
     stringsAsFactors = FALSE, check.names = FALSE, fill = FALSE,
     fileEncoding = "UTF-8-BOM", na.strings = character()
-  )
+  ))
   if (ncol(rows) != 1L) {
     stop("The CSV must contain exactly one column of boolean search queries.")
   }

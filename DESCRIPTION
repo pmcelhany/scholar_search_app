@@ -8,6 +8,7 @@ Description: A modular Shiny interface for multi-query Google Scholar searches
 Encoding: UTF-8
 Imports: 
     dplyr,
+    DT,
     fs,
     gt,
     httr,
@@ -18,6 +19,7 @@ Imports:
     stats,
     stringr,
     utils,
+    xml2,
     zip
 Suggests:
     devtools,

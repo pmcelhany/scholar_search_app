@@ -9,15 +9,23 @@ mod_serp_search_server <- function(id) {
       shiny::div(class = "alert alert-info", role = "status", status())
     )
     output$log_output <- shiny::renderText(paste(logs(), collapse = "\n"))
-    output$summary_table <- shiny::renderUI({
+    output$summary_table <- DT::renderDT({
       shiny::req(results())
-      shiny::HTML(gt::as_raw_html(gt::gt(results()$final_search_summary)))
+      DT::datatable(
+        results()$final_search_summary,
+        options = list(dom = 't', paging = FALSE, scrollX = TRUE),
+        rownames = FALSE
+      )
     })
-    output$results_table <- shiny::renderUI({
+    
+    output$results_table <- DT::renderDT({
       shiny::req(results())
-      shiny::HTML(gt::as_raw_html(
-        gt::gt(utils::head(results()$unique_papers_output, 100))
-      ))
+      DT::datatable(
+        results()$unique_papers_output,
+        options = list(pageLength = 10, scrollX = TRUE),
+        rownames = FALSE,
+        filter = 'top'
+      )
     })
     push_text <- function(id, text) {
       session$sendCustomMessage("serp-search-progress",

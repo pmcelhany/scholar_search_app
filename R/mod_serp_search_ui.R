@@ -58,9 +58,9 @@ mod_serp_search_ui <- function(id) {
         shiny::h3("Search log"),
         shiny::verbatimTextOutput(ns("log_output")),
         shiny::h3("Search summary"),
-        shiny::uiOutput(ns("summary_table")),
+        DT::DTOutput(ns("summary_table")),
         shiny::h3("Search results"),
-        shiny::uiOutput(ns("results_table"))
+        DT::DTOutput(ns("results_table"))
       )
     )
   )

@@ -11,8 +11,14 @@ mod_serp_search_server <- function(id) {
     output$log_output <- shiny::renderText(paste(logs(), collapse = "\n"))
     output$summary_table <- DT::renderDT({
       shiny::req(results())
+      
+      df <- results()$final_search_summary
+      # Convert snake_case to normal formatting (First letter capitalized)
+      colnames(df) <- gsub("_", " ", colnames(df))
+      colnames(df) <- paste0(toupper(substr(colnames(df), 1, 1)), substr(colnames(df), 2, nchar(colnames(df))))
+      
       DT::datatable(
-        results()$final_search_summary,
+        df,
         options = list(dom = 't', paging = FALSE, scrollX = TRUE),
         rownames = FALSE
       )
@@ -30,6 +36,10 @@ mod_serp_search_server <- function(id) {
           display_df$abstract
         )
       }
+      
+      # Convert snake_case to normal formatting (First letter capitalized)
+      colnames(display_df) <- gsub("_", " ", colnames(display_df))
+      colnames(display_df) <- paste0(toupper(substr(colnames(display_df), 1, 1)), substr(colnames(display_df), 2, nchar(colnames(display_df))))
       
       DT::datatable(
         display_df,

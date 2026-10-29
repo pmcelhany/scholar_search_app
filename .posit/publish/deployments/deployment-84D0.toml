@@ -10,9 +10,9 @@ id = "c2fe2a30-42a3-4b9d-8214-3a27471f2c6d"
 dashboard_url = "https://connect.fisheries.noaa.gov/connect/#/apps/c2fe2a30-42a3-4b9d-8214-3a27471f2c6d"
 direct_url = "https://connect.fisheries.noaa.gov/content/c2fe2a30-42a3-4b9d-8214-3a27471f2c6d/"
 logs_url = "https://connect.fisheries.noaa.gov/connect/#/apps/c2fe2a30-42a3-4b9d-8214-3a27471f2c6d/logs"
-deployed_at = "2026-10-28T00:58:31.740Z"
-bundle_id = "7666"
-bundle_url = "https://connect.fisheries.noaa.gov/__api__/v1/content/c2fe2a30-42a3-4b9d-8214-3a27471f2c6d/bundles/7666/download"
+deployed_at = "2026-10-29T02:30:28.398Z"
+bundle_id = "7674"
+bundle_url = "https://connect.fisheries.noaa.gov/__api__/v1/content/c2fe2a30-42a3-4b9d-8214-3a27471f2c6d/bundles/7674/download"
 files = [
     ".posit/publish/Scholar Search-2E2H.toml",
     ".posit/publish/deployments/deployment-84D0.toml",
@@ -61,6 +61,22 @@ requirements = [
     "methods",
 ]
 hash = "dbfa2adb83f8063640982459e153f650"
+
+[renv.packages.DT]
+package = "DT"
+version = "0.34.0"
+source = "Repository"
+repository = "CRAN"
+requirements = [
+    "crosstalk",
+    "htmltools",
+    "htmlwidgets",
+    "jquerylib",
+    "jsonlite",
+    "magrittr",
+    "promises",
+]
+hash = "a9d00f59f9c7e613dd4c3e0d27135a03"
 
 [renv.packages.KernSmooth]
 package = "KernSmooth"
@@ -435,6 +451,19 @@ requirements = [
     "utils",
 ]
 hash = "859d96e65ef198fd43e82b9628d593ef"
+
+[renv.packages.crosstalk]
+package = "crosstalk"
+version = "1.2.2"
+source = "Repository"
+repository = "CRAN"
+requirements = [
+    "R6",
+    "htmltools",
+    "jsonlite",
+    "lazyeval",
+]
+hash = "8b008bc619e0bbebb5646b3d37efdad1"
 
 [renv.packages.curl]
 package = "curl"
@@ -1018,6 +1047,16 @@ requirements = [
     "utils",
 ]
 hash = "cc5ac1ba4c238c7ca9fa6a87ca11a7e2"
+
+[renv.packages.lazyeval]
+package = "lazyeval"
+version = "0.2.2"
+source = "Repository"
+repository = "CRAN"
+requirements = [
+    "R",
+]
+hash = "d908914ae53b04d4c0c0fd72ecc35370"
 
 [renv.packages.lifecycle]
 package = "lifecycle"

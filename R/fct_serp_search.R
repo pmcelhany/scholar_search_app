@@ -1,11 +1,18 @@
-lookup_pubmed_metadata <- function(doi, log_file = NULL) {
-  if (is.na(serp_text(doi)) || !nzchar(doi)) return(NULL)
-  
-  # Step 1: ESearch to convert DOI to PMID
+lookup_pubmed_metadata <- function(doi, title = NA_character_, log_file = NULL) {
+  # Step 1: ESearch to convert DOI or Title to PMID
   search_url <- "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
+  
+  query_term <- if (!is.na(doi) && nzchar(doi)) {
+    paste0(doi, "[doi]")
+  } else if (!is.na(title) && nzchar(title)) {
+    paste0(title, "[Title]")
+  } else {
+    return(NULL)
+  }
+  
   res <- tryCatch(
     httr::GET(search_url, query = list(
-      db = "pubmed", term = paste0(doi, "[doi]"), retmode = "json",
+      db = "pubmed", term = query_term, retmode = "json",
       email = "scholarsearchapp@example.com", tool = "scholarsearchapp"
     ), httr::timeout(10)),
     error = function(e) NULL
@@ -43,9 +50,10 @@ lookup_pubmed_metadata <- function(doi, log_file = NULL) {
   journal_node <- xml2::xml_find_first(xml_doc, "//Title")
   journal <- if (length(journal_node) > 0) xml2::xml_text(journal_node) else NA_character_
   
-  if (is.na(abstract) || !nzchar(abstract)) return(NULL)
+  doi_node <- xml2::xml_find_first(xml_doc, "//ArticleId[@IdType='doi']")
+  found_doi <- if (length(doi_node) > 0) xml2::xml_text(doi_node) else NA_character_
   
-  list(journal = journal, abstract = abstract)
+  list(journal = journal, abstract = abstract, doi = found_doi)
 }
 serp_log <- function(message, log_file = NULL, log_callback = NULL) {
   line <- sprintf("[%s UTC] %s",
@@ -94,7 +102,7 @@ normalize_serpapi_key <- function(api_key) {
 
 robust_serp_search <- function(query, api_key, start_idx = 0, num = 20,
                                log_file = NULL, log_callback = NULL,
-                               max_retries = 3, year_low = NULL, year_high = NULL) {
+                               max_retries = 8, year_low = NULL, year_high = NULL) {
   api_key <- normalize_serpapi_key(api_key)
   if (!nzchar(api_key)) stop("A SerpApi key is required.")
   
@@ -116,45 +124,52 @@ robust_serp_search <- function(query, api_key, start_idx = 0, num = 20,
       error = function(e) NULL
     )
     # Do not log request errors or response bodies: they can contain credentials.
-    if (is.null(response)) {
-      serp_log("SerpApi connection failed.", log_file, log_callback)
-      return(NULL)
-    }
-    status <- httr::status_code(response)
-    if (status == 200L) {
-      result <- tryCatch(
-        jsonlite::fromJSON(httr::content(response, as = "text", encoding = "UTF-8"),
-                           simplifyVector = FALSE),
-        error = function(e) NULL
-      )
-      if (!is.list(result) || !is.null(result$error)) {
-        serp_log("SerpApi returned an invalid response or API error.",
-                 log_file, log_callback)
-        return(NULL)
-      }
-      return(result)
-    }
-    if (status != 429L) {
-      serp_log(sprintf("SerpApi request failed with HTTP %d.", status),
-               log_file, log_callback)
-      return(NULL)
-    }
     
-    # Check if the 429 is due to empty credits rather than throughput limits
-    error_body <- tryCatch(
-      jsonlite::fromJSON(httr::content(response, as = "text", encoding = "UTF-8"), simplifyVector = FALSE),
-      error = function(e) NULL
-    )
-    if (is.list(error_body) && !is.null(error_body$error) && 
-        grepl("run out of searches", error_body$error, ignore.case = TRUE)) {
-      serp_log("CRITICAL: SerpApi account has run out of searches.", log_file, log_callback)
-      # Return a specific string to signal hard failure to the caller
-      return("OUT_OF_CREDITS")
+    if (!is.null(response)) {
+      status <- httr::status_code(response)
+      if (status == 200L) {
+        result <- tryCatch(
+          jsonlite::fromJSON(httr::content(response, as = "text", encoding = "UTF-8"),
+                             simplifyVector = FALSE),
+          error = function(e) NULL
+        )
+        if (is.list(result) && is.null(result$error)) {
+          return(result)
+        } else if (is.list(result) && !is.null(result$error)) {
+          err_msg <- as.character(result$error)
+          # Treat "no results" as a clean end to pagination rather than a failure
+          if (grepl("Google hasn't returned any results", err_msg, ignore.case = TRUE) ||
+              grepl("No results", err_msg, ignore.case = TRUE)) {
+            serp_log(sprintf("SerpApi indicated no more results: %s", err_msg), log_file, log_callback)
+            return(list(organic_results = list(), serpapi_pagination = list()))
+          }
+          serp_log(sprintf("SerpApi returned an API error: %s", err_msg), log_file, log_callback)
+        } else {
+          serp_log("SerpApi returned an invalid JSON response.", log_file, log_callback)
+        }
+      } else if (status == 429L) {
+        # Check if the 429 is due to empty credits rather than throughput limits
+        error_body <- tryCatch(
+          jsonlite::fromJSON(httr::content(response, as = "text", encoding = "UTF-8"), simplifyVector = FALSE),
+          error = function(e) NULL
+        )
+        if (is.list(error_body) && !is.null(error_body$error) && 
+            grepl("run out of searches", error_body$error, ignore.case = TRUE)) {
+          serp_log("CRITICAL: SerpApi account has run out of searches.", log_file, log_callback)
+          # Return a specific string to signal hard failure to the caller
+          return("OUT_OF_CREDITS")
+        }
+        serp_log("SerpApi request failed with HTTP 429 (rate limit).", log_file, log_callback)
+      } else {
+        serp_log(sprintf("SerpApi request failed with HTTP %d.", status), log_file, log_callback)
+      }
+    } else {
+      serp_log("SerpApi connection failed or timed out.", log_file, log_callback)
     }
 
     if (attempt < max_retries) {
-      delay <- 2^attempt + stats::runif(1, 2, 5)
-      serp_log(sprintf("HTTP 429: retrying in %.2f seconds.", delay),
+      delay <- 2^attempt + stats::runif(1, 3, 6)
+      serp_log(sprintf("Retrying in %.2f seconds (attempt %d of %d)...", delay, attempt + 1, max_retries),
                log_file, log_callback)
       Sys.sleep(delay)
     }
@@ -254,34 +269,81 @@ lookup_openalex_metadata <- function(title, doi = NA_character_, link = NA_chara
   NULL
 }
 
-lookup_crossref_metadata <- function(doi, log_file = NULL) {
-  if (is.na(serp_text(doi)) || !nzchar(doi)) return(NULL)
-  response <- tryCatch(
-    httr::GET(
-      paste0("https://api.crossref.org/works/", utils::URLencode(doi, reserved = TRUE)),
-      httr::add_headers(`User-Agent` = "ScholarSearchApp/1.0 (mailto:admin@example.com)"),
-      httr::timeout(10)
-    ),
-    error = function(e) NULL
-  )
-  if (is.null(response) || httr::status_code(response) != 200L) return(NULL)
-  body <- tryCatch(
-    jsonlite::fromJSON(httr::content(response, as = "text", encoding = "UTF-8"),
-                       simplifyVector = FALSE),
-    error = function(e) NULL
-  )
+lookup_crossref_metadata <- function(doi, title = NA_character_, log_file = NULL) {
+  if (!is.na(doi) && nzchar(doi)) {
+    response <- tryCatch(
+      httr::GET(
+        paste0("https://api.crossref.org/works/", utils::URLencode(doi, reserved = TRUE)),
+        httr::add_headers(`User-Agent` = "ScholarSearchApp/1.0 (mailto:admin@example.com)"),
+        httr::timeout(10)
+      ),
+      error = function(e) NULL
+    )
+    if (is.null(response) || httr::status_code(response) != 200L) return(NULL)
+    body <- tryCatch(
+      jsonlite::fromJSON(httr::content(response, as = "text", encoding = "UTF-8"),
+                         simplifyVector = FALSE),
+      error = function(e) NULL
+    )
+    item <- body$message
+  } else if (!is.na(title) && nzchar(title)) {
+    clean_title <- stringr::str_trim(stringr::str_remove_all(title, "\\[.*?\\]"))
+    if (!nzchar(clean_title)) return(NULL)
+    
+    response <- tryCatch(
+      httr::GET(
+        "https://api.crossref.org/works",
+        query = list(
+          `query.bibliographic` = clean_title,
+          rows = 3,
+          select = "abstract,container-title,DOI,title,score"
+        ),
+        httr::add_headers(`User-Agent` = "ScholarSearchApp/1.0 (mailto:admin@example.com)"),
+        httr::timeout(10)
+      ),
+      error = function(e) NULL
+    )
+    if (is.null(response) || httr::status_code(response) != 200L) return(NULL)
+    body <- tryCatch(
+      jsonlite::fromJSON(httr::content(response, as = "text", encoding = "UTF-8"),
+                         simplifyVector = FALSE),
+      error = function(e) NULL
+    )
+    if (is.null(body$message$items) || length(body$message$items) == 0) return(NULL)
+    
+    item <- body$message$items[[1]]
+    
+    # Basic title match check to prevent retrieving a completely wrong abstract
+    found_title <- if (!is.null(item$title) && length(item$title) > 0) item$title[[1]] else ""
+    if (nzchar(found_title) && nzchar(clean_title)) {
+      # Use a loose string match (e.g. check if lowercase alphanumeric characters intersect heavily)
+      clean_t1 <- tolower(gsub("[^a-z0-9]", "", clean_title))
+      clean_t2 <- tolower(gsub("[^a-z0-9]", "", found_title))
+      # If one is not a substring of the other or if lengths are very different, maybe reject?
+      # We'll just check if the first 15 characters match or if the whole thing is a substring.
+      if (!grepl(substr(clean_t1, 1, 15), clean_t2, fixed = TRUE) && 
+          !grepl(substr(clean_t2, 1, 15), clean_t1, fixed = TRUE) &&
+          !grepl(clean_t1, clean_t2, fixed = TRUE)) {
+        return(NULL)
+      }
+    }
+  } else {
+    return(NULL)
+  }
   
-  journal <- serp_text(body$message$`container-title`)
+  journal <- if (!is.null(item$`container-title`) && length(item$`container-title`) > 0) item$`container-title`[[1]] else NA_character_
   if (!is.na(journal) && !nzchar(journal)) journal <- NA_character_
   
-  abstract <- serp_text(body$message$abstract)
+  abstract <- if (!is.null(item$abstract)) item$abstract else NA_character_
   if (!is.na(abstract)) {
     abstract <- stringr::str_remove_all(abstract, "<jats:title>.*?</jats:title>|<title>.*?</title>")
     abstract <- stringr::str_remove_all(abstract, "<[^>]+>")
     abstract <- stringr::str_trim(stringr::str_replace_all(abstract, "\\s+", " "))
   }
   
-  list(journal = journal, abstract = abstract)
+  found_doi <- if (!is.null(item$DOI)) item$DOI else NA_character_
+  
+  list(journal = journal, abstract = abstract, doi = found_doi)
 }
 
 serp_empty_papers <- function() {
@@ -357,7 +419,7 @@ process_single_search_term <- function(
     serp_log(sprintf("  Retrieved %d papers.", length(hits)), log_file, log_callback)
     if (length(hits) >= limit || is.null(result$serpapi_pagination$`next`)) break
     start_idx <- start_idx + length(page)
-    Sys.sleep(stats::runif(1, 1, 2))
+    Sys.sleep(stats::runif(1, 2, 4))
   }
   reformat_author <- function(name) {
     name <- trimws(stringr::str_remove_all(name, "\\.\\.\\.|…"))
@@ -402,8 +464,23 @@ process_single_search_term <- function(
       if (m > 0) doi <- regmatches(link, m)
     }
     
-    pubmed <- if (!is.na(doi) && use_full_abstract_lookup) lookup_pubmed_metadata(doi, log_file) else NULL
-    crossref <- if (is.null(pubmed) && !is.na(doi) && use_full_abstract_lookup) lookup_crossref_metadata(doi, log_file) else NULL
+    pubmed <- if (use_full_abstract_lookup) lookup_pubmed_metadata(doi = doi, title = title, log_file = log_file) else NULL
+    
+    # If pubmed returned NULL or returned an empty abstract, fallback to crossref
+    needs_crossref <- is.null(pubmed) || is.na(serp_text(pubmed$abstract)) || !nzchar(serp_text(pubmed$abstract))
+    crossref <- if (needs_crossref && use_full_abstract_lookup) lookup_crossref_metadata(doi = doi, title = title, log_file = log_file) else NULL
+    
+    
+    # Update DOI if it was found via metadata searches but missing initially
+    if (is.na(doi) || !nzchar(doi)) {
+      if (!is.null(metadata) && !is.na(serp_text(metadata$doi)) && nzchar(serp_text(metadata$doi))) {
+        doi <- serp_text(metadata$doi)
+      } else if (!is.null(pubmed) && !is.na(serp_text(pubmed$doi)) && nzchar(serp_text(pubmed$doi))) {
+        doi <- serp_text(pubmed$doi)
+      } else if (!is.null(crossref) && !is.na(serp_text(crossref$doi)) && nzchar(serp_text(crossref$doi))) {
+        doi <- serp_text(crossref$doi)
+      }
+    }
     
     if (is.na(journal) || stringr::str_detect(journal, "\\.\\.\\.|…")) {
       journal <- serp_text(pubmed$journal, serp_text(crossref$journal, serp_text(metadata$journal, journal)))

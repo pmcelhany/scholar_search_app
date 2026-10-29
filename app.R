@@ -9,7 +9,7 @@ if (requireNamespace("pkgload", quietly = TRUE) && file.exists("DESCRIPTION")) {
 }
 
 # Set to FALSE for development/debugging, TRUE for production behavior
-options("golem.app.prod" = FALSE)
+options("golem.app.prod" = TRUE)
 
 # Register the resource path globally before the UI renders
 shiny::addResourcePath("docs", normalizePath("inst/app/www", mustWork = FALSE))

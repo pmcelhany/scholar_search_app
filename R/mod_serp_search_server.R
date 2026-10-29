@@ -112,7 +112,9 @@ mod_serp_search_server <- function(id) {
           stop("Cannot create the temporary output directory.")
         }
         
-        log_file <- file.path(output_dir, paste0("search_log_", timestamp, ".txt"))
+        base_prefix <- if (is.null(input$file_prefix)) "" else trimws(input$file_prefix)
+        prefix_part <- if (nzchar(base_prefix)) paste0(base_prefix, "_") else ""
+        log_file <- file.path(output_dir, paste0(prefix_part, "search_log_", timestamp, ".txt"))
         logs(character())
         results(NULL)
         update_status(sprintf("Searching %d queries...", length(queries)))
@@ -175,7 +177,7 @@ mod_serp_search_server <- function(id) {
             # Persist completed queries so later failures do not discard results.
             results(save_search_outputs(collected, output_dir, timestamp, 
                                         do_deduplicate = isTRUE(input$deduplicate),
-                                        file_prefix = trimws(input$file_prefix)))
+                                        file_prefix = base_prefix))
             shiny::incProgress(1 / length(queries),
                                 detail = sprintf("Query %d of %d", index, length(queries)))
           }
@@ -207,7 +209,7 @@ mod_serp_search_server <- function(id) {
     
     output$download_results <- shiny::downloadHandler(
       filename = function() {
-        base_name <- trimws(input$file_prefix)
+        base_name <- if (is.null(input$file_prefix)) "" else trimws(input$file_prefix)
         if (!nzchar(base_name)) base_name <- "scholar_search"
         paste0(base_name, "_", format(Sys.time(), "%Y%m%d_%H%M%S", tz = "UTC"), ".zip")
       },

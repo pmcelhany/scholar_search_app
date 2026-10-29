@@ -219,6 +219,11 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>SerpApi Credits Depleted Pop-up:</strong> If the app suddenly aborts and shows a pop-up warning that your account has run out of searches, it means you have exhausted your SerpApi monthly quota. You must visit <a href="https://serpapi.com">SerpApi.com</a> to purchase extra credits or upgrade to a higher-tier plan before you can run any more queries.</li>
 <li><strong>Zero Results or “SerpApi connection failed”:</strong> Double-check that your SerpApi key is valid.</li>
 <li><strong>Fewer Results Than Expected:</strong> See the <em>API vs.&nbsp;Web Browser Discrepancies</em> section above.</li>
+<li><strong>“Retrieved” doesn’t match “Total Matches”:</strong> You may notice in the search summary that the <code>retrieved</code> count is lower than <code>total_matches</code>—even if you disable deduplication and the total matches are below your paper limit. This is completely normal and happens for two main reasons:
+<ol type="1">
+<li><strong>Estimates:</strong> Google Scholar’s <code>total_matches</code> is often an optimistic estimate (e.g., “About 45 results”). As the app paginates through the results, Google Scholar may run out of pages before reaching that number.</li>
+<li><strong>Missing Titles:</strong> The app only counts a paper as “retrieved” if it has a valid, non-empty title. Citations or malformed entries returned by Google Scholar contribute to the <code>total_matches</code> estimate but are safely excluded from your final <code>retrieved</code> dataset.</li>
+</ol></li>
 <li><strong>App Hangs/Pauses:</strong> The app has built-in rate-limiting and backoffs to prevent you from being banned by SerpApi or OpenAlex. Let it run; it will often pause for several seconds between requests intentionally, especially when looking up metadata.</li>
 </ul>
 </section>
